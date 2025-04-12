@@ -1,7 +1,8 @@
 import express from "express";
 const app=express();
 const PORT=3000
-import userRoutes from "./routes/user.js"
+import userRoutes from "./routes/userRoutes.js"
+import blogRoutes from "./routes/blogRoutes.js"
 import connectDB from "./config/connection.js"; // Import the function
 import cors from "cors";
 import dotenv from "dotenv";
@@ -21,7 +22,8 @@ connectDB();
 
 
 app.use("/api",userRoutes)
+app.use("/api/blog",blogRoutes)
 
 app.listen(PORT,()=>{
-        console.log("server is running on port `${PORT}`")
+        console.log(`server is running on port ${PORT}`)
 })
