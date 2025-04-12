@@ -1,0 +1,32 @@
+import { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
+export default function Login() {
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("http://localhost:3000/api/login", formData);
+      localStorage.setItem("token", res.data.token);
+      navigate("/");
+    } catch {
+      alert("Login failed");
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex justify-center items-center bg-base-200">
+      <form onSubmit={handleSubmit} className="card w-96 bg-base-100 shadow-xl p-6 space-y-4">
+        <h2 className="text-2xl font-bold text-center">Login</h2>
+        <input name="email" onChange={handleChange} placeholder="Email" className="input input-bordered w-full" />
+        <input name="password" type="password" onChange={handleChange} placeholder="Password" className="input input-bordered w-full" />
+        <button type="submit" className="btn btn-primary w-full">Login</button>
+      </form>
+    </div>
+  );
+}
