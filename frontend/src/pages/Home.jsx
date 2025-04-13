@@ -8,7 +8,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
-  // Fetch Blogs from API
   useEffect(() => {
     fetchBlogs();
   }, []);
@@ -17,11 +16,7 @@ export default function Home() {
     setLoading(true);
     try {
       const res = await axios.get("http://localhost:3000/api/blog");
-      if (Array.isArray(res.data.response)) {
-        setBlogs(res.data.response);
-      } else {
-        setBlogs([]);
-      }
+      setBlogs(Array.isArray(res.data.response) ? res.data.response : []);
     } catch (error) {
       console.error("Error fetching blogs:", error);
       setBlogs([]);
@@ -30,21 +25,14 @@ export default function Home() {
     }
   };
 
-  // ✅ Correctly receives `newBlog` from the form
   const handleCreate = async (newBlog) => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("You must be logged in to create a blog.");
-      return;
-    }
+    if (!token) return alert("You must be logged in to create a blog.");
 
     try {
       const res = await axios.post("http://localhost:3000/api/blog", newBlog, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       setBlogs([res.data.result, ...blogs]);
       setShowCreateForm(false);
     } catch (err) {
@@ -54,64 +42,40 @@ export default function Home() {
 
   const handleUpdate = async (updatedBlog) => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("Token is missing, user is not authorized.");
-      return; // Don't proceed if no token
-    }
-  
-    console.log("Updated Blog:", updatedBlog); // Log the updatedBlog to check its structure
-  
+    if (!token) return;
+
     try {
       await axios.put(
         `http://localhost:3000/api/blog/${updatedBlog._id}`,
         updatedBlog,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      setBlogs(
-        blogs.map((blog) =>
-          blog._id === updatedBlog._id ? { ...blog, ...updatedBlog } : blog
-        )
-      );
+      setBlogs(blogs.map((b) => (b._id === updatedBlog._id ? updatedBlog : b)));
     } catch (err) {
       console.error("Error updating blog:", err.response?.data || err.message);
     }
   };
-  
-  
-  
-  
 
   const handleDelete = async (id) => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("Token is missing, user is not authorized.");
-      return;
-    }
-  
+    if (!token) return;
+
     try {
       await axios.delete(`http://localhost:3000/api/blog/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setBlogs(blogs.filter((blog) => blog._id !== id));
     } catch (err) {
       console.error("Error deleting blog:", err.response?.data || err.message);
     }
   };
-  
 
   return (
-    <div className="min-h-screen bg-base-100 text-base-content p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">📝 Latest Blogs</h1>
+    <div className="min-h-screen bg-base-200 text-base-content px-4 py-10 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10">
+        <h1 className="text-4xl font-bold">📝 Latest Blogs</h1>
         <button
-          className="btn btn-primary"
+          className="btn btn-accent"
           onClick={() => setShowCreateForm(!showCreateForm)}
         >
           {showCreateForm ? "Close Form" : "➕ Create Blog"}
@@ -119,13 +83,13 @@ export default function Home() {
       </div>
 
       {showCreateForm && (
-        <div className="mb-8">
+        <div className="mb-10 bg-base-100 p-6 rounded-lg shadow-md">
           <CreateBlogForm onCreate={handleCreate} />
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-10">
+        <div className="text-center py-20">
           <span className="loading loading-spinner loading-lg text-primary"></span>
         </div>
       ) : blogs.length === 0 ? (
@@ -145,3 +109,4 @@ export default function Home() {
     </div>
   );
 }
+
