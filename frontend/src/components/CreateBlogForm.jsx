@@ -3,20 +3,22 @@ import { useState } from "react";
 export default function CreateBlogForm({ onCreate }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [isActive, setIsActive] = useState(true); // default value
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!title || !description) return;
 
     const newBlog = {
-      _id: Date.now().toString(), // Just for example — use backend-generated ID in real use
       title,
       description,
+      is_active: isActive,
     };
 
     onCreate(newBlog);
     setTitle("");
     setDescription("");
+    setIsActive(true); // reset to default
   };
 
   return (
@@ -33,6 +35,7 @@ export default function CreateBlogForm({ onCreate }) {
           placeholder="Blog Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          required
         />
 
         <textarea
@@ -41,7 +44,18 @@ export default function CreateBlogForm({ onCreate }) {
           placeholder="Blog Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          required
         />
+
+        <label className="label cursor-pointer">
+          <span className="label-text">Active</span>
+          <input
+            type="checkbox"
+            className="toggle toggle-primary ml-2"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+          />
+        </label>
 
         <button type="submit" className="btn btn-primary w-fit self-end">
           Create Blog

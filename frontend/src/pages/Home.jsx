@@ -30,46 +30,81 @@ export default function Home() {
     }
   };
 
+  // ✅ Correctly receives `newBlog` from the form
   const handleCreate = async (newBlog) => {
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to create a blog.");
       return;
     }
-  
+
     try {
       const res = await axios.post("http://localhost:3000/api/blog", newBlog, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setBlogs([res.data.response, ...blogs]);
+
+      setBlogs([res.data.result, ...blogs]);
       setShowCreateForm(false);
     } catch (err) {
-      console.error("Error creating blog:", err);
+      console.error("Error creating blog:", err.response?.data || err.message);
+    }
+  };
+
+  const handleUpdate = async (updatedBlog) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("Token is missing, user is not authorized.");
+      return; // Don't proceed if no token
+    }
+  
+    console.log("Updated Blog:", updatedBlog); // Log the updatedBlog to check its structure
+  
+    try {
+      await axios.put(
+        `http://localhost:3000/api/blog/${updatedBlog._id}`,
+        updatedBlog,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      setBlogs(
+        blogs.map((blog) =>
+          blog._id === updatedBlog._id ? { ...blog, ...updatedBlog } : blog
+        )
+      );
+    } catch (err) {
+      console.error("Error updating blog:", err.response?.data || err.message);
     }
   };
   
-
-  const handleUpdate = async (updatedBlog) => {
-    try {
-      await axios.put(`http://localhost:3000/api/blog/${updatedBlog._id}`, updatedBlog);
-      setBlogs(
-        blogs.map((blog) => (blog._id === updatedBlog._id ? updatedBlog : blog))
-      );
-    } catch (err) {
-      console.error("Error updating blog:", err);
-    }
-  };
+  
+  
+  
 
   const handleDelete = async (id) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("Token is missing, user is not authorized.");
+      return;
+    }
+  
     try {
-      await axios.delete(`http://localhost:3000/api/blog/${id}`);
+      await axios.delete(`http://localhost:3000/api/blog/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setBlogs(blogs.filter((blog) => blog._id !== id));
     } catch (err) {
-      console.error("Error deleting blog:", err);
+      console.error("Error deleting blog:", err.response?.data || err.message);
     }
   };
+  
 
   return (
     <div className="min-h-screen bg-base-100 text-base-content p-6 max-w-6xl mx-auto">

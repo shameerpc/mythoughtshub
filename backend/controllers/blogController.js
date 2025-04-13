@@ -23,7 +23,7 @@ export const createBlog = async (req, res) => {
 // Get all blogs
 export const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find({ delete_status: false }).populate("creator", "name email");
+    const blogs = await Blog.find({ delete_status: false }).populate("creator", "username email");
     res.status(200).json({success:true,message:"Blog retrieved successfully",response:blogs});
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -42,23 +42,29 @@ export const getBlogById = async (req, res) => {
   }
 };
 
-// Update blog
-export const updateBlog = async (req, res) => {
+ export const updateBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
 
     if (!blog || blog.delete_status) return res.status(404).json({ error: "Blog not found" });
 
-    // Optionally: Check if req.user._id === blog.creator
+    // Validate that required fields are present in req.body
+    if (!req.body.title || !req.body.description) {
+      return res.status(400).json({ error: "Title and description are required" });
+    }
 
+    // Update the blog with the request data
     Object.assign(blog, req.body);
     await blog.save();
 
     res.status(200).json({ message: "Blog updated", blog });
   } catch (err) {
+    console.error("Error updating blog:", err);
     res.status(400).json({ error: err.message });
   }
 };
+
+
 
 // Soft delete
 export const deleteBlog = async (req, res) => {

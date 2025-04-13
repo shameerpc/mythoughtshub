@@ -32,6 +32,13 @@ export default function BlogCard({ blog, onDelete, onUpdate }) {
           <>
             <h2 className="card-title text-xl font-bold">{blog.title}</h2>
             <p>{blog.description.slice(0, 100)}...</p>
+
+            {/* ✅ Show creator username and email */}
+            {blog.creator && (
+              <p className="text-sm text-gray-500 mt-1">
+                ✍️ <strong>{blog.creator.username}</strong> ({blog.creator.email})
+              </p>
+            )}
           </>
         )}
 
@@ -61,6 +68,3 @@ export default function BlogCard({ blog, onDelete, onUpdate }) {
     </div>
   );
 }
-
-  
-  
