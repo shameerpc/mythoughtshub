@@ -37,7 +37,7 @@ const handleCreate = async (newBlog) => {
       newBlog,
       {
         headers: {
-          Authorization: `Bearer ${token}`, // Important format
+          "Content-Type": "multipart/form-data",Authorization: `Bearer ${token}`, // Important format
         },
       }
     );

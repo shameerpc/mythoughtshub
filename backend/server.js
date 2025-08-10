@@ -12,11 +12,12 @@ import commentRoutes from "./routes/commentRoutes.js"
 dotenv.config();
 
 
-
+app.use("/uploads", express.static("uploads"));
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({extended:true}))
 app.use(cors());
+
 
 // Connect to MongoDB
 connectDB();

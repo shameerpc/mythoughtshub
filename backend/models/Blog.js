@@ -8,6 +8,7 @@ const blogSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    image: { type: String, required: false }, // store file name or URL
     description: {
       type: String,
       required: [true, "Description is required"],

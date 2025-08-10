@@ -5,6 +5,13 @@ export default function BlogCard({ blog }) {
 
   return (
     <div className="card bg-base-200 border border-base-300 shadow-xl hover:shadow-2xl transition duration-300">
+      {blog.image && (
+        <img
+          src={`http://localhost:5000/${blog.image}`}
+          alt={blog.title}
+          className="w-full h-48 object-cover rounded-t-xl"
+        />
+      )}
       <div className="card-body">
         <h2 className="card-title text-2xl font-semibold">{blog.title}</h2>
         <p className="text-gray-600 mb-2">{blog.description.slice(0, 120)}...</p>

@@ -6,13 +6,14 @@ import {
   updateBlog,
   deleteBlog,
 } from "../controllers/blogController.js";
+import { upload } from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/autherization.js";
 
 
 const router = express.Router();
 
 // Public / protected based on your auth setup
-router.post("/",  authMiddleware,  createBlog);
+router.post("/",  authMiddleware, upload.single("image"), createBlog);
 router.get("/", getAllBlogs);
 router.get("/:id", getBlogById);
 router.put("/:id",  authMiddleware,  updateBlog);

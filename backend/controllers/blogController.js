@@ -9,6 +9,7 @@ export const createBlog = async (req, res) => {
     const blog = new Blog({
       title,
       description,
+      image: req.file ? `/uploads/${req.file.filename}` : null, // Store file path
       is_active,
       creator: req.user.id, // assuming you’re using auth middleware
     });
