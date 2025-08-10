@@ -9,12 +9,12 @@ const commentSchema = new mongoose.Schema(
     content: {
       type: String,
       required: [true, "content is required"],
-      unique: true,
-      trim: true,
+      // unique: true,
+      // trim: true,
     },
     is_active: {
       type: Boolean,
-      required: true,
+          default: true,
     },
     delete_status: {
       type: Boolean,

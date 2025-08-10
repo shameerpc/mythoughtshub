@@ -12,9 +12,9 @@ import authMiddleware from "../middleware/autherization.js";
 const router = express.Router();
 
 // Public / protected based on your auth setup
-router.post("/:blog",  authMiddleware,  createComment);
+router.post("/:id/comment",  authMiddleware,  createComment);
 router.get("/", getAllComment);
-router.get("/:id", getCommentById);
+router.get("/:id/comments", authMiddleware,getCommentById);
 router.put("/:id",  authMiddleware,  updateComment);
 router.delete("/:id",  authMiddleware,  deleteComment);
 

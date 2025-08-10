@@ -3,23 +3,36 @@ import Comment from "../models/Comment.js";
 // Create a new blog
 export const createComment = async (req, res) => {
   try {
-    console.log(req.user)
-    const { blog }=req.params.body;
-    const { content, is_active } = req.body;
+    const { id } = req.params; // blog ID
+    const { content } = req.body;
+
+        console.log("💬 Creating comment for blog ID:", id);
+    console.log("📩 Comment content:", content);
+    console.log("👤 User (req.user):", req.user);
+
+    // Validate: optional
+    if (!content || !id) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
 
     const comment = new Comment({
-      blog,
+      blog: id,
       content,
-      is_active,
-      creator: req.user.id, // assuming you’re using auth middleware
+      creator: req.user.id, // req.user must be set by middleware
     });
 
     await comment.save();
-    res.status(201).json({ success:true, message: "comment created", result:blog });
+
+    res.status(201).json({
+      success: true,
+      message: "Comment created",
+      newComment: comment, // return the actual saved comment
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 // Get all blogs
 export const getAllComment = async (req, res) => {
@@ -33,13 +46,18 @@ export const getAllComment = async (req, res) => {
 
 // Get single blog
 export const getCommentById = async (req, res) => {
-  try {
-    const comments = await Comments.findById(req.params.id).populate("creator", "name email");
-    if (!comments || comments.delete_status) return res.status(404).json({ error: "comments not found" });
+   try {
+    const blogId = req.params.id;
 
-    res.status(200).json({success:true,message:"comments retrieved successfully",response:comments});
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const comments = await Comment.find({ blog: blogId, delete_status: false })
+      .populate("creator", "username email") // Include user info
+      .sort({ createdAt: -1 })
+        .select("content creator createdAt");
+
+    res.status(200).json({ comments });
+  } catch (error) {
+    console.error("Error fetching comments:", error.message);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 

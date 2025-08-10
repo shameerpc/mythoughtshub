@@ -24,7 +24,7 @@ connectDB();
 
 app.use("/api",userRoutes)
 app.use("/api/blog",blogRoutes)
-app.use("/api/comment",commentRoutes)
+app.use("/api/blogs",commentRoutes)
 
 app.listen(PORT,()=>{
         console.log(`server is running on port ${PORT}`)

@@ -25,20 +25,32 @@ export default function Home() {
     }
   };
 
-  const handleCreate = async (newBlog) => {
-    const token = localStorage.getItem("token");
-    if (!token) return alert("You must be logged in to create a blog.");
+const handleCreate = async (newBlog) => {
+  const token = localStorage.getItem("token");
+  console.log("TOKEN SENT:", token); // Add this to debug
 
-    try {
-      const res = await axios.post("http://localhost:3000/api/blog", newBlog, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setBlogs([res.data.result, ...blogs]);
-      setShowCreateForm(false);
-    } catch (err) {
-      console.error("Error creating blog:", err.response?.data || err.message);
-    }
-  };
+  if (!token) return alert("You must be logged in to create a blog.");
+
+  try {
+    const res = await axios.post(
+      "http://localhost:3000/api/blog",
+      newBlog,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // Important format
+        },
+      }
+    );
+
+    setBlogs([res.data.result, ...blogs]);
+    setShowCreateForm(false);
+  } catch (err) {
+    console.error("Error creating blog:", err.response?.data || err.message);
+  }
+};
+
+
+  
 
   const handleUpdate = async (updatedBlog) => {
     const token = localStorage.getItem("token");
