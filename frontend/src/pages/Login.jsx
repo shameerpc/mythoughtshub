@@ -1,7 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "https://mythoughtshub.onrender.com";
+
 
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
