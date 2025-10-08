@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import BlogCard from "../components/BlogCard";
 import CreateBlogForm from "../components/CreateBlogForm";
-const API_URL = process.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = process.env.REACT_APP_API_URL  || "http://localhost:3000";
 
 
 
