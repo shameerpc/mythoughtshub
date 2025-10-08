@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL || "https://mythoughtshub.onrender.com";
+const API_URL = process.env.VITE_API_URL || "http://localhost:3000";
 
+
+console.log(API_URL);
 
 export default function BlogDetails() {
   const { id } = useParams();
