@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function BlogDetails() {
   const { id } = useParams();
@@ -16,7 +17,7 @@ const [comments, setComments] = useState([]);
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/api/blog/${id}`);
+        const res = await axios.get(`${API_URL}/api/blog/${id}`);
         setBlog(res.data.response);
         setEditedTitle(res.data.response.title);
         setEditedDescription(res.data.response.description);
@@ -30,7 +31,7 @@ const fetchComments = async () => {
   try {
         const token = localStorage.getItem("token");
     const res = await axios.get(
-      `http://localhost:3000/api/blogs/${id}/comments`,
+      `${API_URL}/api/blogs/${id}/comments`,
       {
          headers: { Authorization: `Bearer ${token}` },
       }
@@ -52,7 +53,7 @@ const fetchComments = async () => {
     const token = localStorage.getItem("token");
     try {
       await axios.put(
-        `http://localhost:3000/api/blog/${id}`,
+        `${API_URL}/api/blog/${id}`,
         { title: editedTitle, description: editedDescription },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -70,7 +71,7 @@ const fetchComments = async () => {
   const handleDelete = async () => {
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`http://localhost:3000/api/blog/${id}`, {
+      await axios.delete(`${API_URL}/api/blog/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       navigate("/");
@@ -89,7 +90,7 @@ const fetchComments = async () => {
 
     try {
       const res = await axios.post(
-        `http://localhost:3000/api/blogs/${id}/comment`,
+        `${API_URL}/api/blogs/${id}/comment`,
         { content: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

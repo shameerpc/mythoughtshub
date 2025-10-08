@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import BlogCard from "../components/BlogCard";
 import CreateBlogForm from "../components/CreateBlogForm";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Home() {
   const [blogs, setBlogs] = useState([]);
@@ -15,7 +16,7 @@ export default function Home() {
   const fetchBlogs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:3000/api/blog");
+      const res = await axios.get(`${API_URL}/api/blog`);
       setBlogs(Array.isArray(res.data.response) ? res.data.response : []);
     } catch (error) {
       console.error("Error fetching blogs:", error);
@@ -33,7 +34,7 @@ const handleCreate = async (newBlog) => {
 
   try {
     const res = await axios.post(
-      "http://localhost:3000/api/blog",
+      `${API_URL}/api/blog`,
       newBlog,
       {
         headers: {
@@ -58,7 +59,7 @@ const handleCreate = async (newBlog) => {
 
     try {
       await axios.put(
-        `http://localhost:3000/api/blog/${updatedBlog._id}`,
+        `${API_URL}/api/blog/${updatedBlog._id}`,
         updatedBlog,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -73,7 +74,7 @@ const handleCreate = async (newBlog) => {
     if (!token) return;
 
     try {
-      await axios.delete(`http://localhost:3000/api/blog/${id}`, {
+      await axios.delete(`${API_URL}/api/blog/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setBlogs(blogs.filter((blog) => blog._id !== id));
