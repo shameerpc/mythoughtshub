@@ -107,7 +107,8 @@ const CategoryPage = () => {
   return (
     <div>
       <div style={styles.hero}>
-        <div style={styles.container} style={{ padding: 0 }}>
+        {/* FIXED: Merged duplicate style props into one object */}
+        <div style={{ ...styles.container, padding: 0 }}>
           <h1 style={styles.heroTitle}>{data.category.name}</h1>
           <p style={styles.heroCount}>
             {data.blogs.length} Article{data.blogs.length !== 1 && "s"} Found

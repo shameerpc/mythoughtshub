@@ -101,7 +101,8 @@ export default function Login() {
                 </svg>
               </div>
               <label className="label">
-                <a href="#" className="text-xs label-text-alt link link-hover">Forgot password?</a>
+                {/* FIXED: Changed href="#" to a valid route "/forgot-password" */}
+                <a href="/forgot-password" className="text-xs label-text-alt link link-hover">Forgot password?</a>
               </label>
             </div>
 

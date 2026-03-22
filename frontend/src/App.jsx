@@ -17,18 +17,18 @@ import CategoriesPage from "./pages/CategoriesPage";
 import CategoryPage from "./pages/CategoryPage";
 import ReviewsPage from "./pages/ReviewsPage"; 
 
-const ComingSoon = ({ title }) => (
-  <div className="flex flex-col items-center justify-center min-h-screen bg-base-200">
-    <div className="p-6 text-center">
-      <div className="mb-4 text-6xl animate-bounce">🚧</div>
-      <h1 className="mb-2 text-3xl font-bold text-primary">{title || "Page Under Construction"}</h1>
-      <p className="max-w-md mx-auto mb-6 text-gray-500">
-        We are working hard to bring you this feature. Check back soon!
-      </p>
-      <a href="/" className="btn btn-primary">Back to Home</a>
-    </div>
-  </div>
-);
+// const ComingSoon = ({ title }) => (
+//   <div className="flex flex-col items-center justify-center min-h-screen bg-base-200">
+//     <div className="p-6 text-center">
+//       <div className="mb-4 text-6xl animate-bounce">🚧</div>
+//       <h1 className="mb-2 text-3xl font-bold text-primary">{title || "Page Under Construction"}</h1>
+//       <p className="max-w-md mx-auto mb-6 text-gray-500">
+//         We are working hard to bring you this feature. Check back soon!
+//       </p>
+//       <a href="/" className="btn btn-primary">Back to Home</a>
+//     </div>
+//   </div>
+// );
 
 const NotFound = () => (
   <div className="flex flex-col items-center justify-center min-h-screen bg-base-200">

@@ -87,7 +87,7 @@ export default function Home() {
     <div className="relative w-full overflow-hidden transition-transform duration-300 transform bg-white shadow-xl rounded-2xl lg:col-span-2 hover:-translate-y-2 group">
       <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-primary/20 to-secondary/20 group-hover:opacity-100"></div>
       <div className="flex flex-col items-center p-6 md:flex-row md:p-8">
-        <div className="w-full mb-6 md:w-1/2 md:mb-0 text-center md:text-left">
+        <div className="w-full mb-6 text-center md:w-1/2 md:mb-0 md:text-left">
           <span className="inline-block px-3 py-1 mb-3 text-xs font-bold tracking-widest text-white uppercase rounded-full bg-primary">🔥 Hot Deal</span>
           <h3 className="mb-2 text-2xl font-extrabold text-base-content md:text-3xl">{product.name}</h3>
           <p className="mb-4 text-sm text-gray-600 line-clamp-2 md:text-base">{product.description || "Check out this amazing deal available now on Amazon."}</p>
@@ -123,7 +123,7 @@ export default function Home() {
             
             {/* Left Content */}
             <div className="flex-1 w-full space-y-6 text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary mx-auto lg:mx-0">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mx-auto rounded-full bg-primary/10 text-primary lg:mx-0">
                 <span className="flex w-2 h-2 rounded-full bg-primary"></span>
                 <span className="text-xs font-bold tracking-wide uppercase sm:text-sm">New v2.0 Released</span>
               </div>
@@ -133,15 +133,15 @@ export default function Home() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">Shop Smart.</span>
               </h1>
               
-              <p className="text-base text-gray-500 sm:text-lg lg:max-w-xl mx-auto lg:mx-0">
+              <p className="mx-auto text-base text-gray-500 sm:text-lg lg:max-w-xl lg:mx-0">
                 Join thousands of tech enthusiasts reading in-depth reviews and discovering the best Amazon deals curated by experts.
               </p>
               
               <div className="flex flex-col justify-center w-full gap-4 sm:flex-row lg:justify-start">
-                <Link to="/blog" className="px-8 py-4 text-white rounded-full shadow-lg btn btn-primary hover:shadow-primary/50 w-full sm:w-auto">
+                <Link to="/blog" className="w-full px-8 py-4 text-white rounded-full shadow-lg btn btn-primary hover:shadow-primary/50 sm:w-auto">
                   Start Reading
                 </Link>
-                <a href="#affiliate-section" className="px-8 py-4 border-2 rounded-full btn btn-outline border-primary text-primary hover:bg-primary hover:text-white hover:border-transparent w-full sm:w-auto">
+                <a href="#affiliate-section" className="w-full px-8 py-4 border-2 rounded-full btn btn-outline border-primary text-primary hover:bg-primary hover:text-white hover:border-transparent sm:w-auto">
                   Find Deals
                 </a>
               </div>
@@ -176,7 +176,7 @@ export default function Home() {
             <div className="text-center md:text-left">
               <span className="text-sm font-bold tracking-widest uppercase text-primary">Marketplace</span>
               <h2 className="mt-1 text-3xl font-extrabold text-base-content sm:text-4xl">Gear We Recommend</h2>
-              <p className="max-w-xl mt-2 text-base text-gray-500 md:text-lg mx-auto md:mx-0">
+              <p className="max-w-xl mx-auto mt-2 text-base text-gray-500 md:text-lg md:mx-0">
                 We've tested hundreds of products. Here are the absolute best deals available right now.
               </p>
             </div>
@@ -211,7 +211,7 @@ export default function Home() {
             
             {token && (
               <button
-                className="px-6 py-3 font-bold text-white transition-all shadow-lg btn btn-accent hover:shadow-xl hover:-translate-y-1 w-full sm:w-auto"
+                className="w-full px-6 py-3 font-bold text-white transition-all shadow-lg btn btn-accent hover:shadow-xl hover:-translate-y-1 sm:w-auto"
                 onClick={() => setShowCreateForm(!showCreateForm)}
               >
                 {showCreateForm ? "✕ Cancel" : "✨ Write New Blog"}
@@ -255,7 +255,7 @@ export default function Home() {
           
           {blogs.length > 0 && (
              <div className="mt-12 text-center">
-               <Link to="/blog" className="btn btn-outline btn-wide w-full sm:w-auto">Load More Articles</Link>
+               <Link to="/blog" className="w-full btn btn-outline btn-wide sm:w-auto">Load More Articles</Link>
              </div>
           )}
         </section>
@@ -269,7 +269,7 @@ export default function Home() {
           <p className="max-w-lg mx-auto mb-8 text-sm opacity-80 md:text-base">Get the latest tech news and deals delivered straight to your inbox.</p>
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
             <input type="email" placeholder="Enter your email" className="w-full input input-bordered sm:max-w-md bg-base-100 text-base-content" />
-            <button className="btn btn-primary w-full sm:w-auto">Subscribe</button>
+            <button className="w-full btn btn-primary sm:w-auto">Subscribe</button>
           </div>
         </div>
       </div>
