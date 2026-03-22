@@ -1,32 +1,56 @@
 import express from "express";
-const app=express();
-const PORT = process.env.PORT || 4000;
-import userRoutes from "./routes/userRoutes.js"
-import blogRoutes from "./routes/blogRoutes.js"
-import connectDB from "./config/connection.js"; // Import the function
 import cors from "cors";
 import dotenv from "dotenv";
-import commentRoutes from "./routes/commentRoutes.js"
-const FRONTEND_URL = process.env.FRONTEND_URL || '*';
+import connectDB from "./config/connection.js";
+
+// Import Routes
+import userRoutes from "./routes/userRoutes.js";
+import blogRoutes from "./routes/blogRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
 
 dotenv.config();
 
+const app = express();
+const PORT = process.env.PORT || 4000;
 
-app.use("/uploads", express.static("uploads"));
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({extended:true}))
-app.use(cors({ origin: FRONTEND_URL, credentials: true }));
-
-
-// Connect to MongoDB
+// --- 1. Connect to Database ---
 connectDB();
 
+// --- 2. Middleware Setup ---
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 
-app.use("/api",userRoutes)
-app.use("/api/blog",blogRoutes)
-app.use("/api/blogs",commentRoutes)
+// --- 3. CORS CONFIGURATION (CRITICAL FIX) ---
+// This list must include your Localhost for development
+const allowedOrigins = [
+  process.env.FRONTEND_URL, // Your live site (e.g., https://mythoughtshub.vercel.app)
+  "http://localhost:3000",  // Local React
+  "http://localhost:5173"   // Local Vite
+];
 
-app.listen(PORT,()=>{
-        console.log(`server is running on port ${PORT}`)
-})
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true // Required if you are sending cookies/tokens
+}));
+
+// --- 4. API Routes ---
+app.use("/api", userRoutes);
+app.use("/api/blog", blogRoutes);
+app.use("/api/blogs", commentRoutes); // Note: Ensure this route doesn't conflict with blog routes
+app.use("/api/category", categoryRoutes);
+
+// --- 5. Start Server ---
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

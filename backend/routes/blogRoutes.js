@@ -5,18 +5,28 @@ import {
   getBlogById,
   updateBlog,
   deleteBlog,
+  getBlogsByCategorySlug,
 } from "../controllers/blogController.js";
 import { upload } from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/autherization.js";
 
-
 const router = express.Router();
 
-// Public / protected based on your auth setup
-router.post("/",  authMiddleware, upload.single("image"), createBlog);
+// Create
+router.post("/", authMiddleware, upload.single("image"), createBlog);
+
+// Read
 router.get("/", getAllBlogs);
+
+// CRITICAL: /category/:slug must come BEFORE /:id
+router.get("/category/:slug", getBlogsByCategorySlug); 
+
 router.get("/:id", getBlogById);
-router.put("/:id",  authMiddleware,  updateBlog);
-router.delete("/:id",  authMiddleware,  deleteBlog);
+
+// Update
+router.put("/:id", authMiddleware, upload.single("image"), updateBlog);
+
+// Delete
+router.delete("/:id", authMiddleware, deleteBlog);
 
 export default router;

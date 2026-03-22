@@ -5,19 +5,22 @@ const blogSchema = new mongoose.Schema(
     title: {
       type: String,
       required: [true, "Title is required"],
-      unique: true,
       trim: true,
     },
-    image: { type: String, required: false }, // store file name or URL
+    category: {
+      type: mongoose.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    image: { type: String, required: false }, 
     description: {
       type: String,
       required: [true, "Description is required"],
-      unique: true,
       trim: true,
     },
     is_active: {
       type: Boolean,
-      required: true,
+      default: true, // Set default to true
     },
     delete_status: {
       type: Boolean,
@@ -31,9 +34,8 @@ const blogSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Optional: Indexes for faster querying
 blogSchema.index({ creator: 1 });
-blogSchema.index({ is_active: 1 });
+blogSchema.index({ category: 1 }); // Index for faster category queries
 
 const Blog = mongoose.model("Blog", blogSchema);
 
