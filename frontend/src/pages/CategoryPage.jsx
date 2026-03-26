@@ -2,97 +2,22 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getBlogsByCategorySlug } from "../api/category.api";
 
-const styles = {
-  container: { maxWidth: "1200px", margin: "0 auto", padding: "0 1rem" },
-  hero: {
-    background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)",
-    color: "white",
-    padding: "4rem 1rem",
-    borderRadius: "0 0 2rem 2rem",
-    marginBottom: "3rem",
-    textAlign: "center",
-  },
-  heroTitle: { fontSize: "2.5rem", fontWeight: "800", marginBottom: "0.5rem" },
-  heroCount: { opacity: 0.9, fontSize: "1.1rem" },
-  blogGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-    gap: "2rem",
-    paddingBottom: "4rem",
-  },
-  blogCard: {
-    background: "white",
-    borderRadius: "12px",
-    overflow: "hidden",
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-    display: "flex",
-    flexDirection: "column",
-    textDecoration: "none",
-    color: "inherit",
-    transition: "transform 0.2s",
-  },
-  blogImage: {
-    width: "100%",
-    height: "200px",
-    objectFit: "cover",
-    backgroundColor: "#e5e7eb",
-  },
-  blogContent: { padding: "1.5rem", display: "flex", flexDirection: "column", flex: 1 },
-  blogBadge: {
-    display: "inline-block",
-    backgroundColor: "#dbeafe",
-    color: "#1e40af",
-    padding: "4px 8px",
-    borderRadius: "4px",
-    fontSize: "0.75rem",
-    fontWeight: "600",
-    width: "fit-content",
-    marginBottom: "0.5rem",
-  },
-  blogTitle: { fontSize: "1.25rem", fontWeight: "700", marginBottom: "0.5rem", color: "#1f2937", lineHeight: "1.4" },
-  blogExcerpt: {
-    color: "#6b7280",
-    fontSize: "0.9rem",
-    lineHeight: "1.6",
-    display: "-webkit-box",
-    WebkitLineClamp: 3,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
-    marginBottom: "1rem",
-  },
-  blogMeta: {
-    marginTop: "auto",
-    paddingTop: "1rem",
-    borderTop: "1px solid #f3f4f6",
-    display: "flex",
-    justifyContent: "space-between",
-    color: "#9ca3af",
-    fontSize: "0.85rem",
-  },
-  backLink: {
-    display: "inline-flex",
-    alignItems: "center",
-    color: "#4b5563",
-    textDecoration: "none",
-    fontWeight: "500",
-    marginBottom: "1rem",
-    cursor: "pointer",
-  },
-  empty: { textAlign: "center", padding: "2rem", color: "#6b7280" }
-};
-
 const CategoryPage = () => {
-  const { type } = useParams(); // type is the slug
+  const { type } = useParams(); // 'type' comes from App.jsx route param
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const res = await getBlogsByCategorySlug(type);
         setData(res); // Expecting { category: {}, blogs: [] }
       } catch (err) {
         console.error(err);
+        setData(null);
       } finally {
         setLoading(false);
       }
@@ -100,54 +25,101 @@ const CategoryPage = () => {
     fetchData();
   }, [type]);
 
-  if (loading) return <div style={styles.empty}>Loading articles...</div>;
-  
-  if (!data || !data.category) return <div style={styles.empty}>Category not found.</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center pt-32">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
+  }
+
+  if (!data || !data.category) {
+    return (
+      <div className="flex flex-col items-center justify-center pt-32 text-center">
+        <h2 className="text-2xl font-bold text-error">Category Not Found</h2>
+        <Link to="/categories" className="mt-4 btn btn-outline">Back to Categories</Link>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div style={styles.hero}>
-        {/* FIXED: Merged duplicate style props into one object */}
-        <div style={{ ...styles.container, padding: 0 }}>
-          <h1 style={styles.heroTitle}>{data.category.name}</h1>
-          <p style={styles.heroCount}>
-            {data.blogs.length} Article{data.blogs.length !== 1 && "s"} Found
-          </p>
+    <div className="w-full bg-base-200">
+      <div className="container px-4 py-24 mx-auto max-w-[1600px]">
+        
+        {/* HERO SECTION */}
+        <div className="relative p-10 mb-12 overflow-hidden text-center bg-white rounded-3xl shadow-lg">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-secondary/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+          
+          <div className="relative z-10">
+            <span className="inline-block px-4 py-1 mb-4 text-xs font-bold tracking-widest uppercase bg-primary/10 text-primary rounded-full">
+              Category
+            </span>
+            <h1 className="text-5xl font-extrabold text-base-content capitalize">
+              {data.category.name}
+            </h1>
+            <p className="mt-4 text-xl text-gray-500">
+              {data.blogs.length} Article{data.blogs.length !== 1 && "s"} Found
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div style={styles.container}>
-        <Link to="/categories" style={styles.backLink}>← Back to Categories</Link>
+        <div className="mb-8">
+          <Link to="/categories" className="btn btn-sm btn-ghost gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            Back to Categories
+          </Link>
+        </div>
 
+        {/* BLOGS GRID */}
         {data.blogs.length === 0 ? (
-          <div style={styles.empty}>No blogs in this category yet.</div>
+          <div className="py-20 text-center bg-white border border-gray-200 border-dashed rounded-3xl">
+            <p className="text-gray-500 text-lg">No articles in this category yet.</p>
+            <Link to="/blog" className="mt-4 btn btn-outline">Read Other Articles</Link>
+          </div>
         ) : (
-          <div style={styles.blogGrid}>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {data.blogs.map((blog) => (
-              <Link
-                key={blog._id}
-                to={`/blog/${blog._id}`}
-                style={styles.blogCard}
-                onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-4px)"}
-                onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-              >
-                {blog.image && (
+              <div key={blog._id} className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-base-200 flex flex-col h-full">
+                
+                {/* Image */}
+                <figure className="relative overflow-hidden bg-gray-200 aspect-video">
                   <img
-                    src={`http://localhost:4000${blog.image}`} // Ensure PORT matches backend (4000)
+                    src={blog.image ? `${API_URL}${blog.image}` : "https://placehold.co/800x450?text=No+Image"}
                     alt={blog.title}
-                    style={styles.blogImage}
+                    className="object-cover w-full h-full transform transition-transform duration-500 group-hover:scale-105"
+                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/800x450?text=Image+Error"; }}
                   />
-                )}
-                <div style={styles.blogContent}>
-                  <span style={styles.blogBadge}>{data.category.name}</span>
-                  <h3 style={styles.blogTitle}>{blog.title}</h3>
-                  <p style={styles.blogExcerpt}>{blog.description}</p>
-                  <div style={styles.blogMeta}>
-                    <span>{blog.creator?.username || "Admin"}</span>
-                    <span>{new Date(blog.createdAt).toLocaleDateString()}</span>
+                  <div className="absolute top-4 left-4">
+                    <span className="px-3 py-1 text-xs font-bold text-white rounded-full bg-black/50 backdrop-blur-md">
+                      {data.category.name}
+                    </span>
+                  </div>
+                </figure>
+
+                <div className="p-6 flex flex-col flex-grow">
+                  <h2 className="text-xl font-bold text-base-content mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+                    {blog.title}
+                  </h2>
+                  <p className="text-gray-500 text-sm line-clamp-3 mb-6 leading-relaxed flex-grow">
+                    {blog.description}
+                  </p>
+                  
+                  <div className="mt-auto pt-4 border-t border-base-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                          {blog.creator?.username?.substring(0,2).toUpperCase() || "AD"}
+                        </div>
+                        <span className="text-xs text-gray-500">{blog.creator?.username || "Admin"}</span>
+                      </div>
+                      <Link to={`/blog/${blog._id}`} className="btn btn-sm btn-primary btn-outline">
+                        Read
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

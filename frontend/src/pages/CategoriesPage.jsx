@@ -2,58 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAllCategories } from "../api/category.api";
 
-const styles = {
-  container: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "3rem 1rem",
-    fontFamily: "'Segoe UI', Roboto, sans-serif",
-  },
-  header: { textAlign: "center", marginBottom: "3rem" },
-  title: {
-    fontSize: "2.5rem",
-    fontWeight: "800",
-    color: "#111827",
-    marginBottom: "0.5rem",
-  },
-  subtitle: { color: "#6b7280", fontSize: "1.1rem" },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-    gap: "2rem",
-  },
-  card: {
-    background: "#ffffff",
-    borderRadius: "16px",
-    padding: "2rem",
-    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-    border: "1px solid #f3f4f6",
-    transition: "all 0.3s ease",
-    textDecoration: "none",
-    color: "inherit",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-  },
-  iconCircle: {
-    width: "64px",
-    height: "64px",
-    backgroundColor: "#eff6ff",
-    color: "#2563eb",
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "1.75rem",
-    marginBottom: "1rem",
-  },
-  cardTitle: { fontSize: "1.25rem", fontWeight: "700", color: "#1f2937", marginBottom: "0.5rem" },
-  cardDesc: { fontSize: "0.95rem", color: "#6b7280", lineHeight: "1.5" },
-  loading: { textAlign: "center", padding: "2rem", color: "#6b7280" }
-};
-
-const CategoriesPage = () => {
+export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +10,7 @@ const CategoriesPage = () => {
     const fetchCategories = async () => {
       try {
         const res = await getAllCategories();
-        setCategories(res.response || []);
+        setCategories(res.response || res || []);
       } catch (error) {
         console.error("Error fetching categories:", error);
       } finally {
@@ -71,40 +20,62 @@ const CategoriesPage = () => {
     fetchCategories();
   }, []);
 
-  if (loading) return <div style={styles.loading}>Loading categories...</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center pt-32">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
+  }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Browse by Category</h1>
-        <p style={styles.subtitle}>Find exactly what you're looking for.</p>
-      </div>
+    <div className="w-full bg-base-200">
+      <div className="container px-4 py-24 mx-auto max-w-[1600px]">
+        
+        {/* Header */}
+        <div className="mb-16 text-center">
+          <div className="inline-block px-4 py-1 mb-4 text-xs font-bold tracking-widest uppercase bg-primary/10 text-primary rounded-full">
+            Browse Library
+          </div>
+          <h1 className="text-5xl font-extrabold text-base-content">Explore Categories</h1>
+          <p className="mt-4 text-lg text-gray-500 max-w-2xl mx-auto">
+            Dive into specific topics and find exactly what you're looking for.
+          </p>
+        </div>
 
-      <div style={styles.grid}>
-        {categories.map((cat) => (
-          <Link
-            key={cat._id}
-            to={`/categories/${cat.slug}`} // Uses slug from DB
-            style={styles.card}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-5px)";
-              e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.05)";
-            }}
-          >
-            <div style={styles.iconCircle}>{cat.icon || "📂"}</div>
-            <h2 style={styles.cardTitle}>{cat.name}</h2>
-            <p style={styles.cardDesc}>
-              {cat.description || `Explore the best articles in ${cat.name}`}
-            </p>
-          </Link>
-        ))}
+        {/* Grid */}
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          {categories.length > 0 ? (
+            categories.map((cat) => (
+              <Link
+                key={cat._id}
+                to={`/categories/${cat.slug}`}
+                className="group relative flex flex-col items-center justify-center p-8 text-center bg-white border border-base-200 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
+              >
+                {/* Icon Circle */}
+                <div className="w-20 h-20 mb-6 text-4xl rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors flex items-center justify-center">
+                  {cat.icon || "📂"}
+                </div>
+                
+                <h2 className="text-xl font-bold text-base-content group-hover:text-primary transition-colors">
+                  {cat.name}
+                </h2>
+                
+                <p className="mt-2 text-sm text-gray-500">
+                  {cat.description || `Explore articles in ${cat.name}`}
+                </p>
+
+                {/* Hover Arrow */}
+                <div className="mt-4 opacity-0 transform translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                  <span className="text-sm font-bold text-primary">Explore →</span>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <p className="col-span-full text-center text-gray-500">No categories found.</p>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default CategoriesPage;
+}

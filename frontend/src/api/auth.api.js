@@ -3,29 +3,24 @@ import api from "./axios";
 
 // Register User
 export const registerUser = async (userData) => {
-  try {
-    // We don't need the full baseURL here because it's set in axios.js
-    const response = await api.post("/api/register", userData);
-    return response.data;
-  } catch (error) {
-    // Throw the error so the React Component (Register.jsx) can catch it
-    throw error;
-  }
+  const response = await api.post("/api/register", userData);
+  return response.data;
 };
 
 // Login User
 export const loginUser = async (userData) => {
-  try {
-    const response = await api.post("/api/login", userData);
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+  const response = await api.post("/api/login", userData);
+  return response.data;
 };
 
-
-// NEW: Get Current User Profile
+// Get Current User Profile
 export const getUserProfile = async () => {
-  const response = await api.get("/api/me"); // Ensure your backend has this endpoint
+  const response = await api.get("/api/me");
+  return response.data;
+};
+
+// NEW: Update User Profile (Username & Email)
+export const updateUserProfile = async (userData) => {
+  const response = await api.put("/api/me", userData);
   return response.data;
 };
