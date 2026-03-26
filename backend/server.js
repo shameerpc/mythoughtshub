@@ -8,6 +8,9 @@ import userRoutes from "./routes/userRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import afiliateRoutes from "./routes/afiliateRoutes.js";
+
+
 
 dotenv.config();
 
@@ -49,6 +52,7 @@ app.use("/api", userRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/blogs", commentRoutes); // Note: Ensure this route doesn't conflict with blog routes
 app.use("/api/category", categoryRoutes);
+app.use("/api/affiliate", afiliateRoutes);
 
 // --- 5. Start Server ---
 app.listen(PORT, () => {

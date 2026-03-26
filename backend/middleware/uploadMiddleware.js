@@ -2,24 +2,17 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-// Ensure the uploads folder exists
+// 1. Ensure the uploads folder exists (Still needed, as Sharp will save here)
 const uploadFolder = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadFolder)) {
-  fs.mkdirSync(uploadFolder);
+  fs.mkdirSync(uploadFolder, { recursive: true });
 }
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadFolder); // Folder where images will be stored
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// 2. ✅ CHANGE: Use Memory Storage
+// This keeps the file in RAM (req.file.buffer) so we can compress it with Sharp
+const storage = multer.memoryStorage();
 
-// File type validation
+// File type validation (Keep as is)
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|webp/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -33,7 +26,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 export const upload = multer({ 
-  storage, 
+  storage, // Uses memoryStorage now
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });

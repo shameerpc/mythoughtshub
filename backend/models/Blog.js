@@ -6,36 +6,67 @@ const blogSchema = new mongoose.Schema(
       type: String,
       required: [true, "Title is required"],
       trim: true,
+      index: true,
     },
     category: {
       type: mongoose.Types.ObjectId,
       ref: "Category",
       required: true,
+      index: true,
     },
-    image: { type: String, required: false }, 
+    excerpt: {
+      type: String,
+      maxlength: 200,
+      default: "",
+    },
+    // ✅ UPDATED: Support multiple images with Alt text
+    images: [{
+      url: {
+        type: String,
+        required: true
+      },
+      alt: {
+        type: String,
+        default: "" // For SEO
+      }
+    }],
     description: {
       type: String,
-      required: [true, "Description is required"],
-      trim: true,
+      required: true,
     },
-    is_active: {
+    views: {
+      type: Number,
+      default: 0,
+    },
+    likes: {
+      type: Number,
+      default: 0,
+    },
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    creator: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    is_published: {
       type: Boolean,
-      default: true, // Set default to true
+      default: true,
     },
     delete_status: {
       type: Boolean,
       default: false,
-    },
-    creator: {
-      type: mongoose.Types.ObjectId,
-      ref: "User",
+      select: false,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
-
-blogSchema.index({ creator: 1 });
-blogSchema.index({ category: 1 }); // Index for faster category queries
 
 const Blog = mongoose.model("Blog", blogSchema);
 

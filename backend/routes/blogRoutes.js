@@ -6,14 +6,20 @@ import {
   updateBlog,
   deleteBlog,
   getBlogsByCategorySlug,
+  getMyBlogs
 } from "../controllers/blogController.js";
 import { upload } from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/autherization.js";
 
 const router = express.Router();
 
-// Create
-router.post("/", authMiddleware, upload.single("image"), createBlog);
+
+
+// Accept up to 5 images
+router.post("/",authMiddleware, upload.array("images", 5), createBlog);
+
+// For updates:
+router.patch("/:id",authMiddleware, upload.array("images", 5), updateBlog);
 
 // Read
 router.get("/", getAllBlogs);
@@ -23,10 +29,10 @@ router.get("/category/:slug", getBlogsByCategorySlug);
 
 router.get("/:id", getBlogById);
 
-// Update
-router.put("/:id", authMiddleware, upload.single("image"), updateBlog);
 
 // Delete
 router.delete("/:id", authMiddleware, deleteBlog);
+
+router.get("/user/me", authMiddleware, getMyBlogs);
 
 export default router;
