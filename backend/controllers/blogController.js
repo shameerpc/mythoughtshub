@@ -1,12 +1,27 @@
 import Blog from "../models/Blog.js";
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
+
+// Helper to get upload directory
+const getUploadDir = () => "/tmp/uploads";
 
 export const createBlog = async (req, res) => {
   try {
     console.log("🚀 Create Blog Request Started");
 
-    // 1. Validate Files
+    // 1. CHECK AUTHENTICATION
+    // Support both '_id' (common in Mongoose) and 'id' (common in JWT payloads)
+    const userId = req.user?._id || req.user?.id;
+    
+    if (!userId) {
+      console.log("❌ Authentication failed: User ID not found on request");
+      return res.status(401).json({ 
+        error: "Unauthorized: You must be logged in to create a blog." 
+      });
+    }
+
+    // 2. Validate Files
     if (!req.files || req.files.length === 0) {
       console.log("❌ No files received");
       return res.status(400).json({ error: "No images uploaded." });
@@ -14,21 +29,20 @@ export const createBlog = async (req, res) => {
 
     const { title, description, category, alts } = req.body;
 
-    // 2. Validate Data
+    // 3. Validate Data
     if (!title || !description || !category) {
       console.log("❌ Missing fields");
       return res.status(400).json({ error: "Missing required fields." });
     }
 
-    // 3. FORCE USE /tmp DIRECTORY (Render Safe)
-    // Using '/tmp' avoids "Permission Denied" errors on cloud servers
-    const uploadDir = "/tmp/uploads";
+    // 4. Setup Directory
+    const uploadDir = getUploadDir();
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
       console.log(`📁 Created directory: ${uploadDir}`);
     }
 
-    // 4. Process Images
+    // 5. Process Images
     let processedImages = [];
     let altTexts = [];
     
@@ -39,11 +53,6 @@ export const createBlog = async (req, res) => {
     for (let i = 0; i < req.files.length; i++) {
       const file = req.files[i];
       
-      if (!file.buffer) {
-        console.log("❌ File buffer missing");
-        return res.status(500).json({ error: "File buffer missing. Check Multer config." });
-      }
-
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
       const filename = `blog-${uniqueSuffix}${path.extname(file.originalname)}`;
       const filePath = path.join(uploadDir, filename);
@@ -51,34 +60,27 @@ export const createBlog = async (req, res) => {
       // Write to /tmp
       fs.writeFileSync(filePath, file.buffer);
       processedImages.push({
-        url: `/uploads/${filename}`, // Note: You still need to serve /tmp as /uploads in server.js
+        url: `/uploads/${filename}`, 
         alt: altTexts[i] || ""
       });
       console.log(`✅ Saved image to /tmp: ${filename}`);
     }
 
-    // 5. Handle User ID (Temporarily Dummy or skip if schema allows)
-    // If your schema REQUIRES 'creator', you must fix this.
-    // For now, let's try to save WITHOUT a creator if possible, or use a dummy ID.
-    let userId = req.user?._id; 
-    // If req.user is undefined, we skip it for now to test the upload.
-    // You will need to add the user back later.
-
+    // 6. Prepare Data with Creator
     const blogData = {
       title,
       description,
-      category, // Ensure this ID matches your DB
+      category,
       images: processedImages,
+      creator: userId // Explicitly assign the ID
     };
 
-    // Only add creator if it exists
-    if (userId) blogData.creator = userId;
-
-    console.log("💾 Saving to DB:", blogData);
+    console.log("💾 Saving to DB with Creator ID:", userId);
 
     const blog = new Blog(blogData);
     await blog.save();
     await blog.populate("category", "name");
+    await blog.populate("creator", "name email");
 
     console.log("✅ Blog Saved Successfully");
     res.status(201).json({ success: true, result: blog });
@@ -105,7 +107,8 @@ export const updateBlog = async (req, res) => {
 
     // Handle Images if new ones are uploaded
     if (req.files && req.files.length > 0) {
-      const uploadDir = path.join(process.cwd(), "uploads");
+      // FIXED: Use /tmp for consistency with createBlog
+      const uploadDir = getUploadDir(); 
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
@@ -119,7 +122,7 @@ export const updateBlog = async (req, res) => {
         const filename = `blog-${uniqueSuffix}${path.extname(file.originalname)}`;
         const outputPath = path.join(uploadDir, filename);
 
-        // Using Sharp for optimization here
+        // Optimization with Sharp
         await sharp(file.buffer)
           .resize({ width: 800, withoutEnlargement: true })
           .jpeg({ quality: 80 })
@@ -153,25 +156,71 @@ export const updateBlog = async (req, res) => {
     res.status(500).json({ error: err.message || "Server Error" });
   }
 };
-
 // ... (Keep your other functions like getAllBlogs, getBlogById exactly as they are) ...
 // Just ensure getBlogById and getAllBlogs populate 'images' correctly if needed, 
 // but usually .find() returns the whole object automatically.
 
 export const getAllBlogs = async (req, res) => {
   try {
-    // ✅ CHANGE TO THIS: Empty object means "Find Everything"
-    const blogs = await Blog.find({}) 
-      .populate("category", "name slug")
-      .populate("creator", "username name")
-      .sort({ createdAt: -1 });
+    // 1. Extract Query Parameters with Defaults
+    const page = parseInt(req.query.page) || 1;        // Current page (default 1)
+    const limit = parseInt(req.query.limit) || 10;     // Items per page (default 10)
+    const search = req.query.search || "";             // Search keyword
+    const category = req.query.category || "";         // Category ID filter (optional)
 
-    console.log("Found blogs count:", blogs); // Check your server terminal logs
+    // 2. Build the Query Object (Filtering)
+    const query = {};
 
-    res.status(200).json({ success: true, response: blogs });
+    // Search logic: Case-insensitive search in Title OR Description
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    // Category Filter logic
+    if (category) {
+      query.category = category;
+    }
+
+    // 3. Calculate Total Count (for pagination metadata)
+    const total = await Blog.countDocuments(query);
+
+    // 4. Fetch Data with Pagination, Populate, and Sort
+    const blogs = await Blog.find(query)
+      .populate("category", "name slug") // Get category details
+      .populate("creator", "name username avatar") // Get creator details
+      .sort({ createdAt: -1 }) // Newest first
+      .skip((page - 1) * limit) // Skip previous pages
+      .limit(limit); // Limit results per page
+
+    // 5. Calculate Pagination Meta
+    const totalPages = Math.ceil(total / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    // 6. Send "Beautiful" Structured Response
+    res.status(200).json({
+      success: true,
+      count: total,                // Total items matching search/filter
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        limit: limit,
+        hasNextPage: hasNextPage,
+        hasPrevPage: hasPrevPage
+      },
+      data: blogs
+    });
+
   } catch (error) {
     console.error("Get All Blogs Error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch blogs", 
+      error: error.message 
+    });
   }
 };
 
