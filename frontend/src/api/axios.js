@@ -1,39 +1,36 @@
-// src/api/axios.js
 import axios from "axios";
 
-// Use environment variable or fallback to localhost
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
-// Create a specific axios instance for our API
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
-// 1. Request Interceptor: Automatically attach token if it exists
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken"); // ✅ fixed key
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"]; // ✅ let browser set multipart boundary
+    } else {
+      config.headers["Content-Type"] = "application/json";
+    }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// 2. Response Interceptor: Handle global errors (optional but recommended)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Example: If 401 Unauthorized, logout user
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem("token");
+    if (error.response?.status === 401) {
+      localStorage.removeItem("accessToken"); // ✅ fixed key
       window.location.href = "/login";
+    }
+    if (error.response?.status === 403) {
+      console.log("🚨 Session expired or invalid token.");
     }
     return Promise.reject(error);
   }

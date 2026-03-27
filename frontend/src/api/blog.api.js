@@ -1,14 +1,9 @@
 import api from "./axios";
 
-// --- ADDED THIS FUNCTION ---
 // Get All Blogs (Public Feed)
-
-
-
-
+// Note: Using '/api/blog' to match your backend route definition
 export const getAllBlogs = async (params = {}) => {
-  // params will be { page: 1, limit: 6, search: "...", sort: "..." }
-  const response = await api.get(`/api/blogs`, { params }); 
+  const response = await api.get(`/api/blog`, { params }); 
   return response.data;
 };
 
@@ -18,20 +13,17 @@ export const getBlogById = async (id) => {
   return response.data;
 };
 
-
+// Create Blog
+// Do NOT pass headers here. Axios handles FormData automatically.
 export const createBlog = async (formData) => {
-  const response = await api.post("/api/blog", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const response = await api.post("/api/blog", formData);
   return response.data;
 };
 
-
 // Update Blog
+// Changed 'put' to 'patch' to match your backend router
 export const updateBlog = async (id, formData) => {
-  const response = await api.put(`/api/blog/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const response = await api.patch(`/api/blog/${id}`, formData);
   return response.data;
 };
 

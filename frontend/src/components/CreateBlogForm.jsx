@@ -190,61 +190,49 @@ export default function CreateBlogForm({ isOpen, onClose, initialData }) {
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    
-    if (!formData.category) { 
-      setError("Please select a category."); 
-      return; 
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+
+  if (!formData.category) { setError("Please select a category."); return; }
+  if (!formData.title.trim()) { setError("Title is required."); return; }
+
+  const plainText = formData.description.replace(/<[^>]*>?/gm, "");
+  if (!plainText.trim()) { setError("Content cannot be empty."); return; }
+
+  setLoading(true);
+  try {
+    const dataToSend = new FormData();
+    dataToSend.append("title", formData.title);
+    dataToSend.append("category", formData.category);
+    dataToSend.append("description", formData.description);
+
+    if (formData.images && formData.images.length > 0) {
+      const alts = [];
+      formData.images.forEach((imgObj) => {
+        if (imgObj.file) {
+          dataToSend.append("images", imgObj.file); // ✅ only append real files
+        }
+        alts.push(imgObj.alt || "");
+      });
+      dataToSend.append("alts", JSON.stringify(alts));
     }
-    if (!formData.title.trim()) { 
-      setError("Title is required."); 
-      return; 
+
+    if (isEdit) {
+      await updateBlog(initialData._id, dataToSend);
+    } else {
+      await createBlog(dataToSend);
     }
 
-    const plainText = formData.description.replace(/<[^>]*>?/gm, "");
-    if (!plainText.trim()) { 
-      setError("Content cannot be empty."); 
-      return; 
-    }
-
-    setLoading(true);
-    try {
-      const dataToSend = new FormData();
-      dataToSend.append("title", formData.title);
-      dataToSend.append("category", formData.category);
-      dataToSend.append("description", formData.description);
-
-      if (formData.images && formData.images.length > 0) {
-        formData.images.forEach((imgObj) => {
-          if (imgObj.file) {
-            dataToSend.append("images", imgObj.file);
-          }
-        });
-        const alts = formData.images.map(img => img.alt);
-        dataToSend.append("alts", JSON.stringify(alts));
-      }
-
-      if (isEdit) {
-        await updateBlog(initialData._id, dataToSend);
-      } else {
-        await createBlog(dataToSend);
-      }
-
-      setSuccess(true);
-      setTimeout(() => { 
-        onClose?.(); 
-        setSuccess(false); 
-      }, 1200);
-    } catch (err) {
-      console.error("Submit Error:", err);
-      setError(err?.response?.data?.error || "Failed to save.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    setSuccess(true);
+    setTimeout(() => { onClose?.(); setSuccess(false); }, 1200);
+  } catch (err) {
+    console.error("Submit Error:", err);
+    setError(err?.response?.data?.message || err?.response?.data?.error || "Failed to save.");
+  } finally {
+    setLoading(false);
+  }
+};
   if (!isOpen) return null;
 
   return (
