@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getBlogById, updateBlog, deleteBlog } from "../api/blog.api";
 import { getCommentsByBlogId, addComment } from "../api/comment.api";
-import CreateBlogForm from "../components/CreateBlogForm"; // Keeping your component name
+import CreateBlogForm from "../components/CreateBlogForm";
 
 // --- Helpers ---
 const getImageUrl = (path) => {
@@ -24,18 +24,20 @@ export default function BlogDetails() {
   const contentRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
+  // Data State
   const [blog, setBlog] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
   
-  // Modal State
-  const [showEditModal, setShowEditModal] = useState(false);
+  // Gallery State
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   
-  // Comment State
+  // Modal & Interaction State
+  const [showEditModal, setShowEditModal] = useState(false);
   const [commentText, setCommentText] = useState("");
 
-  // --- CORRECTION 1: WRAP FETCH LOGIC IN USECALLBACK ---
+  // --- DATA FETCHING ---
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -57,9 +59,9 @@ export default function BlogDetails() {
     } finally {
       setLoading(false);
     }
-  }, [id, navigate]); // Dependencies: if id or navigate changes, recreate the function
+  }, [id, navigate]); 
 
-  // --- Scroll Listeners ---
+  // --- SCROLL LOGIC ---
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -72,22 +74,19 @@ export default function BlogDetails() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // --- Data Fetching (Uses extracted function) ---
   useEffect(() => {
     fetchData();
-  }, [fetchData]); // FIX: Added fetchData to dependencies. It is now stable due to useCallback.
+  }, [fetchData]);
 
-  // --- CORRECTION 2: REFETCH DATA AFTER UPDATE ---
+  // --- ACTION HANDLERS ---
   const handleUpdate = async (payload) => {
     if (!token) throw new Error("Please login to edit.");
     
-    // Prepare FormData
     const formData = new FormData();
     formData.append("title", payload.title);
     formData.append("description", payload.description);
     formData.append("category", payload.category);
 
-    // Handle Image
     if (payload.image && !payload.image.startsWith("http")) {
       const res = await fetch(payload.image);
       const blob = await res.blob();
@@ -95,10 +94,7 @@ export default function BlogDetails() {
     }
 
     await updateBlog(id, formData);
-    
-    // --- Call fetchData to get the latest image URL and other data ---
     await fetchData();
-    
     setShowEditModal(false);
   };
 
@@ -125,10 +121,35 @@ export default function BlogDetails() {
     }
   };
 
+  // --- IMAGE GALLERY LOGIC ---
+  // Normalize images: Ensure we always have an array.
+  // If backend sends 'images' array, use it. If only 'image' string exists, wrap it.
+  const galleryImages = React.useMemo(() => {
+    if (blog?.images && blog.images.length > 0) {
+      return blog.images;
+    }
+    if (blog?.image) {
+      return [{ url: blog.image, alt: blog.title }];
+    }
+    return [{ url: null, alt: "Placeholder" }];
+  }, [blog]);
+
+  const handleNextImage = (e) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev + 1) % galleryImages.length);
+  };
+
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    setActiveImageIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+  };
+
+  // Loading Skeleton
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
-        <span className="loading loading-bars loading-lg text-primary"></span>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-gray-400">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-sm font-medium tracking-wide animate-pulse">Loading Story...</p>
       </div>
     );
   }
@@ -136,128 +157,239 @@ export default function BlogDetails() {
   if (!blog) return null;
 
   return (
-    <div className="min-h-screen bg-base-100 pb-20 font-sans text-gray-800 relative">
-      {/* --- READING PROGRESS BAR --- */}
-      <div className="fixed top-0 left-0 w-full h-1 z-[60] bg-gray-200">
-        <div className="h-full bg-primary transition-all duration-100 ease-out shadow-[0_0_10px_rgba(0,0,0,0.5)]" style={{ width: `${scrollProgress}%` }}></div>
+    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-indigo-100 selection:text-indigo-700">
+      
+      {/* --- 1. READING PROGRESS BAR --- */}
+      <div className="fixed top-0 left-0 w-full h-1.5 z-[70] bg-gray-100">
+        <div 
+          className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-100 ease-out shadow-[0_0_15px_rgba(99,102,241,0.5)]" 
+          style={{ width: `${scrollProgress}%` }} 
+        ></div>
       </div>
 
-      {/* --- FLOATING NAVIGATION --- */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b ${
-        scrolled ? "bg-white/95 backdrop-blur-md shadow-lg py-3 border-base-200" : "bg-transparent py-6 border-transparent"
+      {/* --- 2. FLOATING GLASS NAVIGATION --- */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled 
+          ? "bg-white/90 backdrop-blur-md shadow-sm py-3 border-b border-gray-100" 
+          : "bg-transparent py-6"
       }`}>
         <div className="flex items-center justify-between px-6 lg:px-12 max-w-7xl mx-auto">
-          <button onClick={() => navigate(-1)} className={`flex items-center gap-2 font-bold transition-colors ${scrolled ? "text-gray-800 hover:text-primary" : "text-white hover:text-gray-200 drop-shadow-md"}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            <span>Back to Articles</span>
+          <button 
+            onClick={() => navigate(-1)} 
+            className={`flex items-center gap-2 font-bold text-sm tracking-wide transition-all duration-300 ${
+              scrolled ? "text-gray-800 hover:text-indigo-600" : "text-white hover:text-gray-200 drop-shadow-lg"
+            }`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>Back</span>
           </button>
           
           {token && (
-            <div className="flex gap-2">
-              <button onClick={() => setShowEditModal(true)} className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-transform hover:scale-105 ${scrolled ? "bg-gray-100 text-gray-700 hover:bg-gray-200" : "bg-white/20 backdrop-blur-md text-white hover:bg-white/30"}`}>
-                Edit Post
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setShowEditModal(true)} 
+                className={`px-4 py-2 text-xs font-bold uppercase tracking-widest rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                  scrolled 
+                    ? "bg-gray-100 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600" 
+                    : "bg-white/20 backdrop-blur-md text-white hover:bg-white/30 border border-white/20"
+                }`}
+              >
+                Edit
               </button>
-              <button onClick={handleDelete} className={`p-2 rounded-full transition-transform hover:scale-110 ${scrolled ? "text-red-500 hover:bg-red-50" : "text-red-200 hover:bg-white/20"}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              <button 
+                onClick={handleDelete} 
+                className={`p-2 rounded-full transition-all duration-300 hover:scale-110 ${
+                  scrolled ? "text-red-500 hover:bg-red-50" : "text-red-200 hover:bg-red-500/20"
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
               </button>
             </div>
           )}
         </div>
       </nav>
 
-      {/* --- ANIMATED HERO SECTION --- */}
-      <div className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden">
-        <div className="absolute inset-0 transition-transform duration-700 ease-out transform scale-105 animate-zoom-slow">
-          <img src={getImageUrl(blog.image)} alt={blog.title} className="object-cover w-full h-full opacity-90" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-base-100"></div>
+      {/* --- 3. HERO GALLERY SECTION --- */}
+      <div className="relative w-full bg-gray-900">
         
-        <div className="absolute bottom-0 left-0 w-full px-6 pb-16 text-white md:px-12 lg:px-24">
-          <div className="max-w-4xl mx-auto animate-fade-in-up">
-            <div className="flex gap-3 mb-6">
-               <span className="px-4 py-1.5 text-xs font-bold tracking-widest uppercase bg-primary rounded-full shadow-lg">{blog.category?.name || "Article"}</span>
-               {blog.tags && blog.tags.slice(0, 2).map((tag, i) => (
-                 <span key={i} className="px-3 py-1 text-xs font-bold bg-white/20 backdrop-blur-sm rounded-full border border-white/30">#{tag}</span>
-               ))}
-            </div>
-            <h1 className="text-4xl font-bold leading-tight md:text-6xl lg:text-7xl font-serif mb-6 drop-shadow-2xl">{blog.title}</h1>
-            <div className="flex items-center gap-4 text-gray-100 text-sm md:text-base">
-              <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 overflow-hidden rounded-full ring-2 ring-white/50">
-                    <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${blog.creator?.username || 'User'}`} alt="Author" />
-                 </div>
-                 <div className="flex flex-col">
-                    <span className="font-bold text-white">{blog.creator?.username || "Unknown"}</span>
-                    <span className="text-xs text-gray-300">Author</span>
-                 </div>
+        {/* Main Image Display */}
+        <div className="relative w-full h-[60vh] md:h-[75vh] overflow-hidden group">
+          
+          {/* Background Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent z-10 pointer-events-none" />
+
+          {/* Image Slider Track */}
+          <div className="w-full h-full relative">
+             {galleryImages.map((img, idx) => (
+               <div 
+                 key={idx}
+                 className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                   idx === activeImageIndex ? 'opacity-100 z-0' : 'opacity-0'
+                 }`}
+               >
+                 <img 
+                   src={getImageUrl(img.url)} 
+                   alt={img.alt || blog.title} 
+                   className="w-full h-full object-cover transform scale-105 animate-slow-zoom"
+                 />
+               </div>
+             ))}
+          </div>
+
+          {/* Gallery Controls (Arrows) - Only show if multiple images */}
+          {galleryImages.length > 1 && (
+            <>
+              <button 
+                onClick={handlePrevImage}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/30 backdrop-blur-md text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              </button>
+              <button 
+                onClick={handleNextImage}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 hover:bg-white/30 backdrop-blur-md text-white border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </>
+          )}
+
+          {/* Hero Content Text */}
+          <div className="absolute bottom-0 left-0 w-full px-6 pb-16 pt-32 text-white z-20 bg-gradient-to-t from-black via-black/50 to-transparent">
+            <div className="max-w-5xl mx-auto animate-fade-in-up">
+              <div className="flex flex-wrap gap-3 mb-6">
+                 <span className="px-4 py-1.5 text-xs font-bold tracking-widest uppercase bg-indigo-600 rounded-full shadow-lg shadow-indigo-500/40">
+                   {blog.category?.name || "Article"}
+                 </span>
+                 {blog.tags && blog.tags.slice(0, 3).map((tag, i) => (
+                   <span key={i} className="px-3 py-1 text-xs font-semibold bg-white/10 backdrop-blur-md rounded-full border border-white/10">#{tag}</span>
+                 ))}
               </div>
-              <span className="hidden md:inline">•</span>
-              <span className="hidden md:inline">{formatDate(blog.createdAt)}</span>
+              
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold leading-[1.1] mb-6 tracking-tight drop-shadow-2xl">
+                {blog.title}
+              </h1>
+              
+              <div className="flex flex-wrap items-center gap-6 text-sm md:text-base font-medium text-gray-200">
+                <div className="flex items-center gap-3">
+                   <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-400 to-purple-500 p-[2px]">
+                      <div className="w-full h-full rounded-full bg-gray-800 flex items-center justify-center overflow-hidden">
+                         <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${blog.creator?.username || 'User'}`} alt="Author" className="w-full h-full object-cover" />
+                      </div>
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-white font-bold text-base">{blog.creator?.username || "Unknown"}</span>
+                      <span className="text-xs text-gray-400 font-normal uppercase tracking-wider">Author</span>
+                   </div>
+                </div>
+                <span className="hidden md:inline w-px h-4 bg-gray-500"></span>
+                <span className="hidden md:inline">{formatDate(blog.createdAt)}</span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Thumbnail Strip (Only if multiple images) */}
+        {galleryImages.length > 1 && (
+          <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center gap-2 pointer-events-none">
+            {galleryImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveImageIndex(idx)}
+                className={`pointer-events-auto h-1.5 rounded-full transition-all duration-300 ${
+                  idx === activeImageIndex ? "w-8 bg-white" : "w-1.5 bg-white/50 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* --- CONTENT CONTAINER --- */}
-      <div className="relative z-10 bg-base-100 -mt-10 rounded-t-[3rem] shadow-[0_-20px_60px_rgba(0,0,0,0.1)]">
-        <div className="max-w-3xl px-6 mx-auto mt-12 md:px-8">
-          {/* READ MODE ONLY */}
-          <article ref={contentRef} className="py-10 animate-fade-in-up-delayed">
-             <div className="prose prose-lg prose-slate prose-headings:font-serif prose-a:text-primary max-w-none mx-auto text-gray-700">
+      {/* --- 4. CONTENT SECTION --- */}
+      <div className="relative z-10 bg-white -mt-10 rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+        <div className="max-w-3xl px-6 mx-auto mt-16 md:px-0 pb-24">
+          
+          {/* Article Body */}
+          <article ref={contentRef} className="animate-fade-in-up-delayed">
+             <div className="prose prose-lg prose-slate prose-headings:font-serif prose-a:text-indigo-600 prose-img:rounded-xl prose-img:shadow-lg mx-auto text-gray-700 leading-relaxed">
                 {blog.description.split('\n').map((para, i) => (
-                  <p key={i} className="mb-6 leading-8 text-lg">{para}</p>
+                  <p key={i} className="mb-8 text-xl font-light text-gray-700">{para}</p>
                 ))}
              </div>
           </article>
 
-          {/* Divider */}
-          <div className="my-20 border-t border-gray-200 relative">
-             <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-base-100 px-4 text-gray-400 text-sm">End of Article</span>
+          {/* Decorative Divider */}
+          <div className="flex items-center justify-center my-24 space-x-4">
+             <div className="h-px w-16 bg-gray-200"></div>
+             <span className="text-xs font-bold tracking-[0.2em] text-gray-400 uppercase">End of Article</span>
+             <div className="h-px w-16 bg-gray-200"></div>
           </div>
 
           {/* --- COMMENTS SECTION --- */}
-          <div className="mb-20 animate-fade-in-up-delayed">
-            <h3 className="mb-8 text-3xl font-bold font-serif">Discussion ({comments.length})</h3>
+          <div className="animate-fade-in-up-delayed">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-serif font-bold text-gray-900">Discussion</h3>
+              <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">{comments.length} Comments</span>
+            </div>
             
-            <div className="p-6 mb-10 bg-gray-50 rounded-2xl border border-gray-100 shadow-sm">
+            {/* Comment Input */}
+            <div className="p-6 mb-12 bg-gray-50 rounded-3xl border border-gray-100 shadow-inner">
               {token ? (
                 <div className="space-y-4">
-                  <textarea
-                    className="w-full p-4 transition-all border-none rounded-xl textarea textarea-ghost focus:ring-2 focus:ring-primary bg-white shadow-inner"
-                    placeholder="Share your thoughts..." rows="3"
-                    value={commentText} onChange={(e) => setCommentText(e.target.value)}
-                  />
+                  <div className="relative">
+                    <textarea
+                      className="w-full p-5 text-base bg-white border-0 rounded-2xl shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-shadow resize-none"
+                      placeholder="Write something thoughtful..." 
+                      rows="3"
+                      value={commentText} 
+                      onChange={(e) => setCommentText(e.target.value)}
+                    />
+                  </div>
                   <div className="flex justify-end">
-                    <button onClick={handleAddComment} disabled={!commentText.trim()} className="px-8 py-2.5 font-bold text-white rounded-full bg-primary hover:bg-primary-focus disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20 transition-all hover:-translate-y-1">
+                    <button 
+                      onClick={handleAddComment} 
+                      disabled={!commentText.trim()} 
+                      className="px-8 py-3 font-bold text-white transition-all duration-300 bg-indigo-600 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:-translate-y-1 active:scale-95"
+                    >
                       Post Comment
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="py-8 text-center text-gray-500 border-2 border-dashed rounded-xl border-gray-300 bg-white">
-                  <p className="text-lg font-medium">Join the conversation</p>
-                  <p className="mt-2 text-sm">Please <Link to="/login" className="font-bold text-primary hover:underline">login</Link> to comment.</p>
+                <div className="py-10 text-center border-2 border-dashed rounded-3xl border-gray-200 bg-white">
+                  <div className="inline-flex items-center justify-center w-12 h-12 mb-4 bg-gray-100 rounded-full">
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                  </div>
+                  <p className="text-lg font-medium text-gray-900">Join the conversation</p>
+                  <p className="mt-2 text-sm text-gray-500">Please <Link to="/login" className="font-bold text-indigo-600 hover:underline">login</Link> to share your thoughts.</p>
                 </div>
               )}
             </div>
 
-            <div className="space-y-8">
+            {/* Comments List */}
+            <div className="space-y-6">
               {comments.length === 0 ? (
-                <p className="py-10 text-center text-gray-400 bg-gray-50 rounded-2xl">No comments yet. Be the first!</p>
+                <div className="py-12 text-center bg-gray-50 rounded-3xl">
+                  <p className="text-gray-400 italic">No comments yet. Be the first to start a discussion!</p>
+                </div>
               ) : (
                 comments.map((c) => (
-                  <div key={c._id} className="flex gap-4 group">
+                  <div key={c._id} className="flex gap-4 animate-fade-in">
                     <div className="flex-shrink-0">
-                      <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden ring-2 ring-white shadow-sm">
-                        <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${c.creator?.username || 'User'}`} alt="User" />
+                      <div className="w-12 h-12 rounded-full bg-indigo-100 overflow-hidden ring-2 ring-white shadow-sm">
+                        <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${c.creator?.username || 'User'}`} alt="User" className="w-full h-full" />
                       </div>
                     </div>
-                    <div className="flex-grow bg-white p-5 rounded-2xl shadow-sm border border-gray-100 group-hover:shadow-md transition-shadow">
+                    <div className="flex-grow bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
                       <div className="flex items-baseline justify-between mb-2">
                         <h4 className="font-bold text-gray-900">{c.creator?.username || "Anonymous"}</h4>
-                        <span className="text-xs text-gray-400">{formatDate(c.createdAt)}</span>
+                        <span className="text-xs text-gray-400 font-medium">{formatDate(c.createdAt)}</span>
                       </div>
-                      <p className="text-gray-600 whitespace-pre-wrap">{c.content}</p>
+                      <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{c.content}</p>
                     </div>
                   </div>
                 ))
@@ -270,15 +402,13 @@ export default function BlogDetails() {
 
       {/* --- EDIT MODAL --- */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-           {/* Backdrop */}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
            <div 
-             className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
+             className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto transition-opacity opacity-0 animate-fade-in"
              onClick={() => setShowEditModal(false)}
            ></div>
            
-           {/* Modal Content */}
-           <div className="relative z-10 w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden pointer-events-auto max-h-[90vh] overflow-y-auto">
+           <div className="relative z-10 w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden pointer-events-auto max-h-[90vh] overflow-y-auto transform transition-all scale-95 animate-scale-up">
               <CreateBlogForm 
                 isOpen={showEditModal}
                 onClose={() => setShowEditModal(false)}
@@ -289,13 +419,20 @@ export default function BlogDetails() {
         </div>
       )}
 
+      {/* Custom CSS Animations */}
       <style jsx>{`
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes zoomSlow { from { transform: scale(1); } to { transform: scale(1.05); } }
-        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
-        .animate-fade-in-up-delayed { animation: fadeInUp 0.8s ease-out 0.3s forwards; opacity: 0; }
-        .animate-fade-in { animation: fadeInUp 0.5s ease-out forwards; }
-        .animate-zoom-slow { animation: zoomSlow 10s linear infinite alternate; }
+        @keyframes slowZoom { from { transform: scale(1); } to { transform: scale(1.1); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scaleUp { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        
+        .animate-fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade-in-up-delayed { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards; opacity: 0; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* 20s slow zoom for the hero background */
+        .animate-slow-zoom { animation: slowZoom 20s linear infinite alternate; }
       `}</style>
     </div>
   );
