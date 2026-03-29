@@ -6,6 +6,26 @@ import BlogCard from "../components/BlogCard";
 import CreateBlogForm from "../components/CreateBlogForm";
 import AffiliateCard from "../components/AffiliateCard";
 
+// Import Icons for Design
+import { 
+  ShieldCheck, Zap, Award, 
+  Cpu, Smartphone, Camera, Headphones, 
+  Gamepad2, Watch, Laptop, Monitor 
+} from "lucide-react";
+
+// Icon Mapping for Categories (Dynamic Icons based on category name)
+const getCategoryIcon = (name) => {
+  const n = name.toLowerCase();
+  if (n.includes("phone") || n.includes("mobile")) return <Smartphone className="w-8 h-8" />;
+  if (n.includes("laptop") || n.includes("computer")) return <Laptop className="w-8 h-8" />;
+  if (n.includes("camera")) return <Camera className="w-8 h-8" />;
+  if (n.includes("audio") || n.includes("sound") || n.includes("headphone")) return <Headphones className="w-8 h-8" />;
+  if (n.includes("gaming")) return <Gamepad2 className="w-8 h-8" />;
+  if (n.includes("watch")) return <Watch className="w-8 h-8" />;
+  if (n.includes("monitor") || n.includes("tv")) return <Monitor className="w-8 h-8" />;
+  return <Cpu className="w-8 h-8" /> // Default
+};
+
 export default function Home() {
   const [blogs, setBlogs] = useState([]);
   const [products, setProducts] = useState([]);
@@ -13,7 +33,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [loadingCats, setLoadingCats] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
 
   // --- 1. SEO EFFECT ---
   useEffect(() => {
@@ -27,24 +47,42 @@ export default function Home() {
     metaDescription.setAttribute("content", "Discover the latest technology, honest reviews, and verified Amazon deals curated for you.");
   }, []);
 
-  // --- 2. DATA LOADING EFFECT ---
+  // --- 2. DATA LOADING EFFECT (FIXED) ---
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     try {
+      // ✅ FIX: Pass default params to mimic the working BlogList page behavior
+      const params = { page: 1, limit: 6 };
+
       const [blogsData, productsData, catsData] = await Promise.all([
-        fetchBlogs(),
+        fetchBlogs(params), 
         fetchAffiliateProducts(),
         getAllCategories()
       ]);
 
-      // Robust data extraction
-      setBlogs(Array.isArray(blogsData.response) ? blogsData.response : []);
-      setProducts(Array.isArray(productsData) ? productsData : []);
-      const catData = catsData.response || catsData || [];
-      setCategories(Array.isArray(catData) ? catData : []);
+      // ✅ FIX: Use the exact same robust logic as BlogList.jsx to extract data
+      // This handles cases where the API might return { data: [...] }, { response: [...] }, or [...]
+      let blogList = [];
+      if (Array.isArray(blogsData)) {
+        blogList = blogsData;
+      } else if (blogsData?.response && Array.isArray(blogsData.response)) {
+        blogList = blogsData.response;
+      } else if (blogsData?.data && Array.isArray(blogsData.data)) {
+        blogList = blogsData.data;
+      }
+
+      const productList = Array.isArray(productsData) ? productsData : [];
+      const catList = Array.isArray(catsData?.response) ? catsData.response : (Array.isArray(catsData) ? catsData : []);
+
+      console.log("Home Blogs Loaded:", blogList.length); // Debugging
+      console.log("Home Categories Loaded:", catList.length);
+
+      setBlogs(blogList);
+      setProducts(productList);
+      setCategories(catList);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
@@ -58,7 +96,7 @@ export default function Home() {
     loadData();
   };
 
-  // --- 3. INTERNAL HELPER COMPONENTS ---
+  // --- 3. INTERNAL COMPONENTS ---
 
   const FeaturedProduct = ({ product }) => (
     <div className="relative overflow-hidden transition-all duration-300 transform bg-white shadow-xl rounded-2xl hover:-translate-y-2 hover:shadow-2xl lg:col-span-2 group">
@@ -100,18 +138,35 @@ export default function Home() {
     </div>
   );
 
-  const CategoryCard = ({ cat }) => (
-    <Link 
-      to={`/categories/${cat.slug}`} 
-      className="relative p-8 overflow-hidden transition-all duration-300 bg-white shadow-lg group rounded-xl hover:shadow-2xl"
-    >
-      <div className="absolute inset-0 transition-all bg-gradient-to-br from-primary/0 to-secondary/0 group-hover:from-primary/5 group-hover:to-secondary/5"></div>
-      <div className="relative z-10 flex flex-col items-center justify-center text-center">
-        <h3 className="text-xl font-bold transition-colors text-base-content group-hover:text-primary">{cat.name}</h3>
-        <span className="mt-2 text-sm text-gray-400 transition-opacity opacity-0 group-hover:opacity-100">Explore →</span>
-      </div>
-    </Link>
-  );
+  // ✅ NEW BEAUTIFUL CATEGORY CARD
+  const CategoryCard = ({ cat }) => {
+    const Icon = getCategoryIcon(cat.name);
+    return (
+      <Link 
+        to={`/categories/${cat.slug}`} 
+        className="relative overflow-hidden transition-all duration-300 border group rounded-2xl bg-slate-900 border-slate-800 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20"
+      >
+        {/* Background Glow */}
+        <div className="absolute inset-0 transition-opacity duration-500 opacity-0 bg-gradient-to-br from-primary/10 to-secondary/10 group-hover:opacity-100"></div>
+        
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center p-8 text-center h-full min-h-[180px]">
+          <div className="p-4 mb-4 text-white transition-transform duration-300 bg-white/10 rounded-xl group-hover:scale-110 group-hover:bg-primary/20 backdrop-blur-sm">
+            <div className="transition-colors text-primary group-hover:text-white">
+              {Icon}
+            </div>
+          </div>
+          <h3 className="text-lg font-bold transition-colors text-slate-100 group-hover:text-white">
+            {cat.name}
+          </h3>
+          <div className="flex items-center mt-2 space-x-2 transition-all duration-300 -translate-y-2 opacity-0 group-hover:opacity-100 group-hover:translate-y-0">
+            <span className="text-xs font-medium text-primary">Explore</span>
+            <svg className="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+          </div>
+        </div>
+      </Link>
+    );
+  };
 
   // Animated Counter Component
   const StatCard = ({ stat }) => {
@@ -178,21 +233,15 @@ export default function Home() {
 
       <div className="w-full bg-base-200">
         
-        {/* --- HERO SECTION (AURORA DESIGN) --- */}
+        {/* --- HERO SECTION --- */}
         <div className="relative w-full overflow-hidden bg-slate-900 text-white min-h-[90vh] flex items-center">
-          {/* Animated Background Gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 animate-gradient opacity-90"></div>
-          
-          {/* Glowing Blobs */}
           <div className="absolute top-0 bg-purple-500 rounded-full left-1/4 w-96 h-96 mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
           <div className="absolute bottom-0 bg-blue-500 rounded-full right-1/4 w-96 h-96 mix-blend-multiply filter blur-3xl opacity-20 animate-float-delayed"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-pink-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-10 animate-pulse"></div>
 
-          {/* Main Content */}
           <div className="relative z-10 container px-4 mx-auto max-w-[1600px]">
             <div className="flex flex-col items-center justify-center min-h-[80vh] text-center lg:text-left lg:flex-row lg:gap-16">
-              
-              {/* Text Content */}
               <div className="flex-1 max-w-3xl space-y-8">
                 <div className="stagger-1">
                   <span className="inline-flex items-center gap-2 px-4 py-1.5 text-xs font-bold tracking-wider text-blue-300 uppercase bg-blue-500/10 rounded-full border border-blue-500/20 backdrop-blur-sm">
@@ -228,10 +277,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Floating Glass Cards (Desktop) */}
               <div className="hidden lg:flex lg:w-1/2 lg:items-center lg:justify-center">
                 <div className="relative w-full max-w-md">
-                  {/* Card 1 */}
                   <div className="absolute top-0 right-0 z-10 w-64 p-6 border shadow-2xl bg-white/10 backdrop-blur-lg border-white/20 rounded-2xl animate-float">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="flex items-center justify-center w-10 h-10 text-green-400 rounded-full bg-green-500/20">✓</div>
@@ -240,7 +287,6 @@ export default function Home() {
                     <p className="text-xs text-slate-300">"Best tech blog I've read this year."</p>
                   </div>
 
-                  {/* Card 2 */}
                   <div className="p-6 mt-20 border shadow-2xl bg-white/10 backdrop-blur-lg border-white/20 rounded-2xl animate-float-delayed">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-12 h-12 rounded-lg bg-gradient-to-tr from-pink-500 to-purple-600"></div>
@@ -256,15 +302,12 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
-
-          {/* Bottom Fade */}
           <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-base-200 to-transparent"></div>
         </div>
 
-        {/* --- AFFILIATE METRICS SECTION (UPDATED) --- */}
+        {/* --- METRICS SECTION --- */}
         <div className="relative py-20 overflow-hidden bg-white border-b border-base-300">
           <div className="absolute inset-0 opacity-[0.03]" style={{backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px'}}></div>
           <div className="container grid grid-cols-2 gap-8 mx-auto max-w-[1600px] sm:grid-cols-4 relative z-10">
@@ -279,32 +322,64 @@ export default function Home() {
           </div>
         </div>
 
-        {/* --- WHY TRUST US SECTION --- */}
-        <section className="py-20 bg-white">
-          <div className="container px-4 mx-auto max-w-[1600px] text-center">
-            <h2 className="mb-6 text-4xl font-bold text-base-content">Why Trust MyThoughtsHub?</h2>
-            <p className="max-w-3xl mx-auto text-xl leading-relaxed text-gray-500">
-              We provide honest, research-based reviews. Our goal is to help you make the best buying decisions without the noise of the internet.
-            </p>
-            <div className="flex justify-center gap-4 mt-8">
-               <div className="badge badge-lg badge-outline">Unbiased</div>
-               <div className="badge badge-lg badge-outline">Verified</div>
-               <div className="badge badge-lg badge-outline">Detailed</div>
+        {/* --- ✅ NEW: WHY TRUST US (BEAUTIFUL GRID) --- */}
+        <section className="py-24 bg-slate-50">
+          <div className="container px-4 mx-auto max-w-[1400px]">
+            <div className="mb-16 text-center">
+              <span className="inline-block px-4 py-1.5 mb-4 text-xs font-bold tracking-widest text-blue-600 uppercase bg-blue-50 rounded-full">Our Promise</span>
+              <h2 className="text-4xl font-extrabold text-slate-900 md:text-5xl">Why Trust MyThoughtsHub?</h2>
+              <p className="max-w-2xl mx-auto mt-4 text-xl text-slate-600">We don't just review products; we analyze them so you don't have to.</p>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-3">
+              {/* Feature 1 */}
+              <div className="relative p-8 transition-all duration-300 bg-white border shadow-sm border-slate-100 rounded-3xl hover:shadow-xl group hover:-translate-y-1">
+                <div className="inline-flex items-center justify-center p-4 mb-6 text-blue-600 transition-colors duration-300 bg-blue-50 rounded-2xl group-hover:bg-blue-600 group-hover:text-white">
+                  <ShieldCheck size={32} strokeWidth={1.5} />
+                </div>
+                <h3 className="mb-3 text-2xl font-bold text-slate-900">Unbiased Reviews</h3>
+                <p className="leading-relaxed text-slate-600">
+                  Our reviews are independent and unsponsored. We tell you exactly what's good, what's bad, and what's ugly.
+                </p>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="relative p-8 transition-all duration-300 bg-white border shadow-sm border-slate-100 rounded-3xl hover:shadow-xl group hover:-translate-y-1">
+                <div className="inline-flex items-center justify-center p-4 mb-6 text-orange-600 transition-colors duration-300 bg-orange-50 rounded-2xl group-hover:bg-orange-600 group-hover:text-white">
+                  <Zap size={32} strokeWidth={1.5} />
+                </div>
+                <h3 className="mb-3 text-2xl font-bold text-slate-900">Real-Time Deals</h3>
+                <p className="leading-relaxed text-slate-600">
+                  Our algorithm scans Amazon 24/7 to find price drops and hidden gems that actually offer value.
+                </p>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="relative p-8 transition-all duration-300 bg-white border shadow-sm border-slate-100 rounded-3xl hover:shadow-xl group hover:-translate-y-1">
+                <div className="inline-flex items-center justify-center p-4 mb-6 text-purple-600 transition-colors duration-300 bg-purple-50 rounded-2xl group-hover:bg-purple-600 group-hover:text-white">
+                  <Award size={32} strokeWidth={1.5} />
+                </div>
+                <h3 className="mb-3 text-2xl font-bold text-slate-900">Expert Verified</h3>
+                <p className="leading-relaxed text-slate-600">
+                  Every link is verified safe. Every product is tested (if possible) or researched by our tech experts.
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* --- DYNAMIC CATEGORIES --- */}
-        <section className="py-20">
+        {/* --- ✅ NEW: DYNAMIC CATEGORIES (TRENDING DESIGN) --- */}
+        <section className="py-24 bg-white">
           <div className="container px-4 mx-auto max-w-[1600px]">
             <div className="mb-12 text-center">
               <span className="text-sm font-bold tracking-widest uppercase text-primary">Library</span>
               <h2 className="mt-2 text-4xl font-bold text-base-content">Explore Categories</h2>
               <p className="mt-2 text-gray-500">Find content that matters to you</p>
             </div>
+            
             {loadingCats ? (
                <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                 {[1,2,3,4].map(i => <div key={i} className="h-40 bg-base-300 rounded-2xl animate-pulse"></div>)}
+                 {[1,2,3,4].map(i => <div key={i} className="h-48 bg-slate-100 rounded-3xl animate-pulse"></div>)}
                </div>
             ) : (
               <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
@@ -319,7 +394,7 @@ export default function Home() {
         </section>
 
         {/* --- AFFILIATE SECTION --- */}
-        <section id="affiliate-section" className="py-20 bg-base-100">
+        <section id="affiliate-section" className="py-24 bg-base-100">
           <div className="container px-4 mx-auto max-w-[1600px]">
             <div className="flex flex-col justify-between gap-6 mb-8 md:flex-row md:items-end">
               <div>
@@ -349,7 +424,7 @@ export default function Home() {
         </section>
 
         {/* --- BLOG SECTION --- */}
-        <section className="py-20">
+        <section className="py-24 bg-slate-50">
           <div className="container px-4 mx-auto max-w-[1600px]">
             <div className="flex flex-col justify-between gap-6 mb-12 md:flex-row md:items-end">
               <div>
@@ -366,33 +441,48 @@ export default function Home() {
               )}
             </div>
 
-            {/* BLOG GRID */}
-            {blogs.length > 0 && (
-              <div className="mb-16">
-                <h3 className="flex items-center gap-2 mb-6 text-xl font-bold text-gray-700">🔥 Featured Story</h3>
-                <BlogCard blog={blogs[0]} featured={true} />
-              </div>
-            )}
-
+            {/* DEBUGGING & EMPTY STATE */}
             {loading ? (
                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                  {[1,2,3].map(i => <div key={i} className="h-96 bg-base-300 rounded-3xl animate-pulse"></div>)}
                </div>
-            ) : blogs.length <= 1 ? (
-               <div className="py-24 text-center bg-white border border-gray-200 border-dashed rounded-3xl">
-                  <p className="text-lg text-gray-500">More stories coming soon...</p>
+            ) : blogs.length === 0 ? (
+               <div className="py-24 text-center bg-white border border-gray-300 border-dashed rounded-3xl">
+                  <h3 className="text-2xl font-bold text-gray-700">No Stories Yet</h3>
+                  <p className="mt-2 text-gray-500">Be the first to share your thoughts with the world.</p>
+                  {token && (
+                    <button 
+                      className="mt-6 btn btn-primary"
+                      onClick={() => setShowCreateModal(true)}
+                    >
+                      Write the First Story
+                    </button>
+                  )}
                </div>
             ) : (
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {blogs.slice(1).map(blog => (
-                  <BlogCard key={blog._id} blog={blog} />
-                ))}
-              </div>
-            )}
+              <>
+                {/* Featured Blog */}
+                {blogs.length > 0 && (
+                  <div className="mb-16">
+                    <h3 className="flex items-center gap-2 mb-6 text-xl font-bold text-gray-700">🔥 Featured Story</h3>
+                    <BlogCard blog={blogs[0]} featured={true} />
+                  </div>
+                )}
 
-            <div className="mt-16 text-center">
-              <Link to="/blog" className="px-8 py-3 btn btn-outline btn-wide">View All Articles</Link>
-            </div>
+                {/* Blog Grid */}
+                {blogs.length > 1 && (
+                  <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    {blogs.slice(1).map(blog => (
+                      <BlogCard key={blog._id} blog={blog} />
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-16 text-center">
+                  <Link to="/blog" className="px-8 py-3 btn btn-outline btn-wide">View All Articles</Link>
+                </div>
+              </>
+            )}
           </div>
         </section>
 

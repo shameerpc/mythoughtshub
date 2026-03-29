@@ -4,7 +4,7 @@ import { getAllCategories } from "../api/category.api";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   
   // 1. Get full user object to access avatar or name
   // FIX: Wrapped in useMemo to prevent reference change on every render
@@ -57,7 +57,7 @@ export default function Navbar() {
   }, []);
 
   const logout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("user"); // Clear user data too
     navigate("/login");
   };

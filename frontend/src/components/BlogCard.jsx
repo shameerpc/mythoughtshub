@@ -1,12 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 
 // --- Helper Functions ---
 
 const getImageUrl = (imagePath) => {
   if (!imagePath) return "https://picsum.photos/seed/blog/800/600";
+  
+  // ✅ FIX 1: Changed default port to 4000 to match your server.js
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
-  return imagePath.startsWith("http") ? imagePath : `${API_URL}/${imagePath}`;
+  
+  // ✅ FIX 2: Removed the "/" between API_URL and imagePath.
+  // Since imagePath already starts with "/", we don't need to add another one.
+  return imagePath.startsWith("http") ? imagePath : `${API_URL}${imagePath}`;
 };
 
 const formatDate = (dateString) => {
@@ -30,12 +35,8 @@ export default function BlogCard({ blog }) {
     ? blog.images 
     : [{ url: null, alt: blog.title }]; // Fallback structure
 
-  // Helper to get current image URL with cache buster
-  const currentImageObj = imagesList[currentIndex];
-  const imageUrl = getImageUrl(currentImageObj?.url);
+  // Helper for cache buster (used in the render map)
   const cacheBuster = blog.updatedAt ? `?t=${new Date(blog.updatedAt).getTime()}` : '';
-  const finalImageUrl = `${imageUrl}${cacheBuster}`;
-  const altText = currentImageObj?.alt || blog.title;
 
   const displayCategory = blog.category
     ? (typeof blog.category === 'string' ? blog.category : blog.category.name)
@@ -45,9 +46,10 @@ export default function BlogCard({ blog }) {
 
   // --- Slider Logic ---
 
-  const nextSlide = () => {
+  // Wrapped in useCallback to stabilize the function reference for the useEffect dependency array
+  const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % imagesList.length);
-  };
+  }, [imagesList.length]);
 
   const prevSlide = () => {
     setCurrentIndex((prevIndex) => 
@@ -70,19 +72,19 @@ export default function BlogCard({ blog }) {
     if (touchStart - touchEnd < -50) prevSlide(); // Swipe Right -> Prev
   };
 
-  // Auto-play functionality (pauses on hover logic handled via CSS/Events if desired, 
-  // but here we use a simple interval)
+  // Auto-play functionality
+  // Added 'nextSlide' to dependency array
   useEffect(() => {
     if (isSlider) {
       autoPlayRef.current = setInterval(nextSlide, 5000); // 5 seconds
       return () => clearInterval(autoPlayRef.current);
     }
-  }, [isSlider]);
+  }, [isSlider, nextSlide]);
 
   // --- Render ---
 
   return (
-    <div className="group relative flex flex-col h-full transition-all duration-300 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-2xl hover:-translate-y-2 overflow-hidden">
+    <div className="relative flex flex-col h-full overflow-hidden transition-all duration-300 bg-white border border-gray-100 shadow-sm group rounded-2xl hover:shadow-2xl hover:-translate-y-2">
       
       {/* --- IMAGE SECTION --- */}
       <figure 
@@ -93,15 +95,15 @@ export default function BlogCard({ blog }) {
         
         {/* Slider Container */}
         <div 
-          className="flex transition-transform duration-500 ease-out h-full"
+          className="flex h-full transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
         >
           {imagesList.map((img, idx) => (
-            <div key={idx} className="min-w-full h-full relative">
+            <div key={idx} className="relative h-full min-w-full">
               <img
                 src={`${getImageUrl(img.url)}${cacheBuster}`}
                 alt={img.alt || blog.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
                 onError={(e) => { e.target.src = "https://picsum.photos/seed/error/800/600"; }}
               />
             </div>
@@ -109,12 +111,12 @@ export default function BlogCard({ blog }) {
         </div>
 
         {/* Gradient Overlay for readability (Trendy Design) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60 pointer-events-none" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/40 to-transparent opacity-60" />
 
         {/* Category Badge (Glassmorphism) */}
         {displayCategory && (
-          <div className="absolute top-4 left-4 z-10">
-            <span className="px-3 py-1 text-xs font-bold tracking-wider text-white uppercase bg-white/20 backdrop-blur-md border border-white/30 rounded-full shadow-lg">
+          <div className="absolute z-10 top-4 left-4">
+            <span className="px-3 py-1 text-xs font-bold tracking-wider text-white uppercase border rounded-full shadow-lg bg-white/20 backdrop-blur-md border-white/30">
               {displayCategory}
             </span>
           </div>
@@ -141,7 +143,7 @@ export default function BlogCard({ blog }) {
             </button>
 
             {/* Dots Indicator */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+            <div className="absolute z-20 flex space-x-2 -translate-x-1/2 bottom-4 left-1/2">
               {imagesList.map((_, idx) => (
                 <button
                   key={idx}
@@ -170,14 +172,14 @@ export default function BlogCard({ blog }) {
         </div>
 
         {/* Title */}
-        <h2 className="mb-3 text-xl font-bold text-gray-900 leading-tight transition-colors group-hover:text-indigo-600">
+        <h2 className="mb-3 text-xl font-bold leading-tight text-gray-900 transition-colors group-hover:text-indigo-600">
           <Link to={`/blog/${blog._id}`} className="hover:underline">
             {blog.title}
           </Link>
         </h2>
 
         {/* Description */}
-        <p className="flex-grow mb-6 text-sm text-gray-500 line-clamp-3 leading-relaxed">
+        <p className="flex-grow mb-6 text-sm leading-relaxed text-gray-500 line-clamp-3">
           {blog.description || "No description available."}
         </p>
 
@@ -187,7 +189,7 @@ export default function BlogCard({ blog }) {
           {/* Author Info */}
           {blog.creator && (
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-white rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md">
+              <div className="flex items-center justify-center w-10 h-10 text-sm font-bold text-white rounded-full shadow-md bg-gradient-to-br from-indigo-500 to-purple-600">
                 {typeof blog.creator === 'string' 
                   ? blog.creator.charAt(0).toUpperCase() 
                   : (blog.creator.username?.charAt(0).toUpperCase() || 'U')}

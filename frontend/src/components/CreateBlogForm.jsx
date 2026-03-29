@@ -11,6 +11,7 @@ import {
 // ─────────────────────────────────────────────
 const RichTextEditor = ({ value, onChange }) => {
   const editorRef = useRef(null);
+  
   useEffect(() => {
     if (editorRef.current && value !== editorRef.current.innerHTML) {
       editorRef.current.innerHTML = value;
@@ -48,7 +49,14 @@ const RichTextEditor = ({ value, onChange }) => {
           </button>
         ))}
       </div>
-      <div ref={editorRef} contentEditable onInput={handleInput} className="cb-editor-body p-4 min-h-[200px] outline-none bg-white" style={{ wordBreak: "break-word" }} data-placeholder="Start writing your story here…" />
+      <div 
+        ref={editorRef} 
+        contentEditable 
+        onInput={handleInput} 
+        className="cb-editor-body p-4 min-h-[200px] outline-none bg-white" 
+        style={{ wordBreak: "break-word" }} 
+        data-placeholder="Start writing your story here…" 
+      />
       <style>{`.cb-editor-body:empty:before{content:attr(data-placeholder);color:#94a3b8;pointer-events:none;}`}</style>
     </div>
   );
@@ -61,7 +69,6 @@ const ImageUploader = ({ value, onChange }) => {
   const fileRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
-  // FIX: Wrapped in useCallback to stabilize the function for handleDrop
   const handleFiles = useCallback((files) => {
     const newImages = Array.from(files).map(file => ({
       file,
@@ -71,7 +78,6 @@ const ImageUploader = ({ value, onChange }) => {
     onChange([...(value || []), ...newImages]);
   }, [value, onChange]);
 
-  // FIX: Added handleFiles to dependency array
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     setDragging(false);
@@ -161,7 +167,6 @@ export default function CreateBlogForm({ isOpen, onClose, initialData }) {
   useEffect(() => {
     getAllCategories()
       .then((res) => {
-        console.log("Categories API Response:", res);
         const cats = res.response || res || []; 
         setCategories(Array.isArray(cats) ? cats : []);
       })
@@ -175,7 +180,11 @@ export default function CreateBlogForm({ isOpen, onClose, initialData }) {
           title: initialData.title || "",
           category: initialData.category?._id || initialData.category || "",
           description: initialData.description || "",
-          images: initialData.images?.map(img => ({ url: img.url, alt: img.alt })) || []
+          // Map existing images to the format the uploader expects
+          images: initialData.images?.map(img => ({ 
+            url: img.url, 
+            alt: img.alt || "" 
+          })) || []
         });
       } else {
         setFormData({ title: "", category: "", description: "", images: [] });
@@ -190,49 +199,71 @@ export default function CreateBlogForm({ isOpen, onClose, initialData }) {
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  if (!formData.category) { setError("Please select a category."); return; }
-  if (!formData.title.trim()) { setError("Title is required."); return; }
+    if (!formData.category) { setError("Please select a category."); return; }
+    if (!formData.title.trim()) { setError("Title is required."); return; }
 
-  const plainText = formData.description.replace(/<[^>]*>?/gm, "");
-  if (!plainText.trim()) { setError("Content cannot be empty."); return; }
+    const plainText = formData.description.replace(/<[^>]*>?/gm, "");
+    if (!plainText.trim()) { setError("Content cannot be empty."); return; }
 
-  setLoading(true);
-  try {
-    const dataToSend = new FormData();
-    dataToSend.append("title", formData.title);
-    dataToSend.append("category", formData.category);
-    dataToSend.append("description", formData.description);
+    setLoading(true);
+    try {
+      const dataToSend = new FormData();
+      dataToSend.append("title", formData.title);
+      dataToSend.append("category", formData.category);
+      dataToSend.append("description", formData.description);
 
-    if (formData.images && formData.images.length > 0) {
+      // ── IMAGE HANDLING LOGIC ──
       const alts = [];
-      formData.images.forEach((imgObj) => {
-        if (imgObj.file) {
-          dataToSend.append("images", imgObj.file); // ✅ only append real files
-        }
-        alts.push(imgObj.alt || "");
-      });
-      dataToSend.append("alts", JSON.stringify(alts));
-    }
+      const existingImageUrls = [];
 
-    if (isEdit) {
-      await updateBlog(initialData._id, dataToSend);
-    } else {
-      await createBlog(dataToSend);
-    }
+      if (formData.images && formData.images.length > 0) {
+        formData.images.forEach((imgObj) => {
+          if (imgObj.file) {
+            // 1. It's a new file upload
+            dataToSend.append("images", imgObj.file);
+            alts.push(imgObj.alt || "");
+          } else if (imgObj.url && isEdit) {
+            // 2. It's an existing image (Edit mode only)
+            // We collect URLs to send to backend so it knows not to delete them
+            existingImageUrls.push({ url: imgObj.url, alt: imgObj.alt || "" });
+          }
+        });
+      }
 
-    setSuccess(true);
-    setTimeout(() => { onClose?.(); setSuccess(false); }, 1200);
-  } catch (err) {
-    console.error("Submit Error:", err);
-    setError(err?.response?.data?.message || err?.response?.data?.error || "Failed to save.");
-  } finally {
-    setLoading(false);
-  }
-};
+      // Send Alts for new files
+      if (alts.length > 0) {
+        dataToSend.append("alts", JSON.stringify(alts));
+      }
+
+      // Send Existing Images (Edit Mode Preservation)
+      // This requires your backend to handle an "existingImages" field to merge with new uploads
+      if (isEdit && existingImageUrls.length > 0) {
+        dataToSend.append("existingImages", JSON.stringify(existingImageUrls));
+      } else if (isEdit && existingImageUrls.length === 0 && formData.images.length === 0) {
+         // If edit mode and user deleted ALL images, explicitly send empty array to clear them
+         dataToSend.append("existingImages", JSON.stringify([]));
+      }
+
+      if (isEdit) {
+        await updateBlog(initialData._id, dataToSend);
+      } else {
+        await createBlog(dataToSend);
+      }
+
+      setSuccess(true);
+      setTimeout(() => { onClose?.(); setSuccess(false); }, 1200);
+    } catch (err) {
+      console.error("Submit Error:", err);
+      setError(err?.response?.data?.message || err?.response?.data?.error || "Failed to save.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (

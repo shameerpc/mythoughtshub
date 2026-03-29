@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import axios from "axios"; // ✅ Import axios at the top
 
 export default function Contact() {
-  // SEO: Update Document Title and Meta Description
+  // --- 1. SEO LOGIC ---
   useEffect(() => {
     document.title = "Contact Us - MyThoughtsHub | Get in Touch";
     let metaDesc = document.querySelector('meta[name="description"]');
@@ -13,7 +14,7 @@ export default function Contact() {
     metaDesc.setAttribute("content", "Have questions? Reach out to the MyThoughtsHub team. Find our contact details, business hours, or send us a direct message.");
   }, []);
 
-  // Form State
+  // --- 2. STATE ---
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,17 +23,40 @@ export default function Contact() {
     message: ""
   });
 
+  // --- 3. HANDLERS ---
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Submitted:", formData);
-    alert("Thank you for contacting us! We will get back to you shortly.");
-    setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+    
+    // ✅ Show Loading State
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerText;
+    submitBtn.innerText = "Sending...";
+    submitBtn.disabled = true;
+
+    try {
+      // ✅ Send Data to Backend
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/contact`, formData);
+
+      if (response.data.success) {
+        alert(response.data.message); // "Message received!..."
+        // Reset Form
+        setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send message. Please try again.");
+    } finally {
+      // ✅ Reset Button State
+      submitBtn.innerText = originalText;
+      submitBtn.disabled = false;
+    }
   };
 
+  // --- 4. RENDER ---
   return (
     <div className="min-h-screen pb-20 bg-base-200">
       
@@ -206,7 +230,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="mb-1 text-xs font-bold uppercase opacity-60">Phone</p>
-                  <p className="transition-colors hover:text-primary">+91 98765 43210</p>
+                  <p className="transition-colors hover:text-primary">+91 7012819002</p>
                 </div>
               </div>
 
@@ -221,7 +245,7 @@ export default function Contact() {
                 <div>
                   <p className="mb-1 text-xs font-bold uppercase opacity-60">Location</p>
                   <p className="transition-colors hover:text-primary">
-                    Tech Park, Digital City<br/>
+                    Kozhikode<br/>
                     Kerala, India
                   </p>
                 </div>
