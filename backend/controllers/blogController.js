@@ -1,4 +1,7 @@
 import Blog from "../models/Blog.js";
+// ✅ ADD THIS LINE:
+import Category from "../models/Category.js"; 
+
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
@@ -171,6 +174,8 @@ export const getAllBlogs = async (req, res) => {
     // 2. Build the Query Object (Filtering)
     const query = {};
 
+    query.delete_status = false; // Exclude soft-deleted blogs
+
     // Search logic: Case-insensitive search in Title OR Description
     if (search) {
       query.$or = [
@@ -228,7 +233,7 @@ export const getAllBlogs = async (req, res) => {
 export const getBlogById = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id)
-      .populate("creator", "name email")
+      .populate("creator", "username email")
       .populate("category", "name slug");
 
     if (!blog || blog.delete_status)
@@ -245,39 +250,45 @@ export const getBlogById = async (req, res) => {
 
 
 
+
+// ... other imports ...
+
 export const getBlogsByCategorySlug = async (req, res) => {
   try {
-    // 1. Get slug and normalize to lowercase to avoid case-sensitivity issues
     const { slug } = req.params;
-    const normalizedSlug = slug.toLowerCase();
+    
+    console.log(`[DEBUG] Fetching category for slug: ${slug}`); // Log 1
 
-    // 2. Find the category by slug
-    const category = await Category.findOne({ slug: normalizedSlug });
-
+    // 1. Find Category
+    const category = await Category.findOne({ slug });
+    
     if (!category) {
+      console.log("[DEBUG] Category not found"); // Log 2
       return res.status(404).json({ message: "Category not found" });
     }
 
-    // 3. Find blogs that reference this category's ID
-    // Note: 'delete_status' is included assuming your Blog model has this field.
-    // If you don't use soft-deletes, remove that line.
-    const blogs = await Blog.find({
-      category: category._id,
-      delete_status: false, 
-    })
-      .populate("creator", "username email")
-      .populate("category", "name slug")
-      .sort({ createdAt: -1 });
+    console.log(`[DEBUG] Found Category: ${category.name} (ID: ${category._id})`); // Log 3
 
-    // 4. Return data matching your frontend expectation
+    // 2. Find Blogs using the Category ID
+    const blogs = await Blog.find({ 
+      category: category._id, 
+      is_published: true 
+    })
+    .populate("creator", "username name email") 
+    .populate("category", "name slug") 
+    .sort({ createdAt: -1 });
+
+    console.log(`[DEBUG] Found ${blogs.length} blogs`); // Log 4
+
     res.status(200).json({
+      success: true,
       category: category,
       blogs: blogs,
     });
-
   } catch (err) {
-    console.error("Error in getBlogsByCategorySlug:", err);
-    res.status(500).json({ message: err.message });
+    // ✅ This logs the ACTUAL error to your Render terminal
+    console.error("[ERROR] in getBlogsByCategorySlug:", err); 
+    res.status(500).json({ error: err.message });
   }
 };
 

@@ -31,7 +31,7 @@ router.get("/:id", getBlogById);
 
 
 // Delete
-router.delete("/:id", authMiddleware, deleteBlog);
+router.post("/:id", authMiddleware, deleteBlog);
 
 router.get("/user/me", authMiddleware, getMyBlogs);
 

@@ -11,6 +11,7 @@ import blogRoutes from "./routes/blogRoutes.js";
 import commentRoutes from "./routes/commentRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import afiliateRoutes from "./routes/afiliateRoutes.js";
+import contactRoutes from "./routes/contact.routes.js";
 
 // 1. Load Environment Variables
 dotenv.config();
@@ -63,6 +64,9 @@ app.use("/api/blog", blogRoutes);
 app.use("/api/blogs", commentRoutes); 
 app.use("/api/category", categoryRoutes);
 app.use("/api/affiliate", afiliateRoutes);
+
+
+app.use("/api/contact", contactRoutes);
 
 // 7. Global Error Handling (Good Practice)
 app.use((err, req, res, next) => {
