@@ -24,3 +24,9 @@ export const updateUserProfile = async (userData) => {
   const response = await api.put("/api/me", userData);
   return response.data;
 };
+
+// Login admin
+export const loginAdmin = async (userData) => {
+  const response = await api.post("/api/admin/login", userData);
+  return response.data;
+};
