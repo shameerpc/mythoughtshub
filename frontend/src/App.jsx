@@ -33,7 +33,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBlogs from "./pages/admin/AdminBlogs";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
 import AdminComments from "./pages/admin/AdminComments";
-
+import LoginPage from "./pages/admin/Login";
 // ==========================================
 // 3. LAYOUT: USER SIDE (Public Website)
 // ==========================================
@@ -225,11 +225,13 @@ function App() {
           <Route path="disclaimer" element={<Disclaimer />} />
           <Route path="terms" element={<Terms />} />
         </Route>
-
+          <Route path="admin/login" element={<LoginPage />} />
+          
         {/* ==========================
              ADMIN SIDE ROUTES
              Uses AdminLayout (Sidebar + Header)
              ========================== */}
+        <Route path="/" element={<UserLayout />}/>
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="blogs" element={<AdminBlogs />} />
