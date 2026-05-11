@@ -1,40 +1,24 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs"; // Import file system to create the folder if it doesn't exist
 
-// 1. Define the upload directory (Must match server.js)
-const uploadDir = "/tmp/uploads";
+const storage = multer.memoryStorage();
 
-// 2. Ensure the directory exists automatically
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log(`✅ Created Upload Directory: ${uploadDir}`);
-}
-
-// 3. Configure DISK storage (Instead of memory)
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, uploadDir); // Save files to /tmp/uploads
-  },
-  filename: function (req, file, cb) {
-    // Create a unique filename to prevent overwrites
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    // Keep the original extension
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
-// 4. Validate file type
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
+  if (
+    file.mimetype.startsWith("image") ||
+    file.mimetype.startsWith("video")
+  ) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed!"), false);
+    cb(new Error("Only images & videos allowed"), false);
   }
 };
 
-export const upload = multer({ 
-  storage, // Use the disk storage defined above
+const upload = multer({
+  storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB
+  },
 });
+
+export default upload;

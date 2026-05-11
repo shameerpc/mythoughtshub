@@ -8,7 +8,7 @@ import {
   getBlogsByCategorySlug,
   getMyBlogs
 } from "../controllers/blogController.js";
-import { upload } from "../middleware/uploadMiddleware.js";
+import upload from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/autherization.js";
 
 const router = express.Router();

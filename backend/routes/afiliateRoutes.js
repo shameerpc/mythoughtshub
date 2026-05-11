@@ -1,29 +1,30 @@
 import express from "express";
+import upload from "../middleware/uploadMiddleware.js";
 import {
   createProduct,
   getAllProducts,
   getFeaturedProducts,
   getProductBySlug,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 } from "../controllers/afiliateController.js";
 
 const router = express.Router();
 
-// CREATE
-router.post("/", createProduct);
+// ✅ CREATE with multiple files
+router.post("/", upload.array("media", 10), createProduct);
 
 // GET ALL
 router.get("/", getAllProducts);
 
-// GET FEATURED (Top Deals)
+// FEATURED
 router.get("/featured", getFeaturedProducts);
 
-// GET SINGLE
+// SINGLE
 router.get("/:slug", getProductBySlug);
 
-// UPDATE
-router.put("/:id", updateProduct);
+// ✅ UPDATE with optional files
+router.put("/:id", upload.array("media", 10), updateProduct);
 
 // DELETE
 router.delete("/:id", deleteProduct);
