@@ -57,13 +57,18 @@ const affiliateSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    clicks: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
 
 // 🔥 Better slug
 affiliateSchema.pre("save", function (next) {
-  if (this.name) {
+  if (this.isModified("name") || !this.slug) {
     this.slug =
       this.name.toLowerCase().replace(/\s+/g, "-") +
       "-" +

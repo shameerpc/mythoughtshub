@@ -13,6 +13,7 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import afiliateRoutes from "./routes/afiliateRoutes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import adminRoutes from "./routes/adminRoutes.js"
+import reviewRoutes from "./routes/reviewRoutes.js";
 // 1. Load Environment Variables
 dotenv.config();
 
@@ -59,12 +60,15 @@ app.use(cors({
 }));
 
 // 6. API Routes
+app.use("/api/admin", adminRoutes);
 app.use("/api", userRoutes);
 app.use("/api/blog", blogRoutes);
 app.use("/api/blogs", commentRoutes); 
 app.use("/api/category", categoryRoutes);
 app.use("/api/affiliate", afiliateRoutes);
-app.use("/api/admin", adminRoutes);
+app.use("/api/afiliate", afiliateRoutes);  // Spelling alias
+app.use("/api/affleate", afiliateRoutes);  // Spelling alias
+app.use("/api/reviews", reviewRoutes);
 
 
 app.use("/api/contact", contactRoutes);

@@ -1,58 +1,64 @@
 import Comment from "../models/Comment.js";
+import Blog from "../models/Blog.js";
 
-// Create a new blog
 export const createComment = async (req, res) => {
   try {
-    const { id } = req.params; // blog ID
+    const { id } = req.params;
     const { content } = req.body;
 
-        console.log("💬 Creating comment for blog ID:", id);
-    console.log("📩 Comment content:", content);
-    console.log("👤 User (req.user):", req.user);
-
-    // Validate: optional
-    if (!content || !id) {
+    if (!id || !content?.trim()) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const blog = await Blog.findOne({ _id: id, delete_status: false });
+    if (!blog) {
+      return res.status(404).json({ error: "Blog not found" });
     }
 
     const comment = new Comment({
       blog: id,
-      content,
-      creator: req.user.id, // req.user must be set by middleware
+      content: content.trim(),
+      creator: req.user.id,
     });
 
     await comment.save();
+    await comment.populate("creator", "username email");
 
     res.status(201).json({
       success: true,
       message: "Comment created",
-      newComment: comment, // return the actual saved comment
+      newComment: comment,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-
-// Get all blogs
 export const getAllComment = async (req, res) => {
   try {
-    const comments = await Comment.find({ delete_status: false }).populate("creator", "username email");
-    res.status(200).json({success:true,message:"Comment retrieved successfully",response:comments});
+    const comments = await Comment.find({ delete_status: false })
+      .populate("creator", "username email")
+      .populate("blog", "title")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      message: "Comments retrieved successfully",
+      response: comments,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Get single blog
 export const getCommentById = async (req, res) => {
-   try {
+  try {
     const blogId = req.params.id;
 
     const comments = await Comment.find({ blog: blogId, delete_status: false })
-      .populate("creator", "username email") // Include user info
+      .populate("creator", "username email")
       .sort({ createdAt: -1 })
-        .select("content creator createdAt");
+      .select("content creator createdAt updatedAt is_active");
 
     res.status(200).json({ comments });
   } catch (error) {
@@ -61,40 +67,55 @@ export const getCommentById = async (req, res) => {
   }
 };
 
- export const updateComment = async (req, res) => {
+export const updateComment = async (req, res) => {
   try {
-    const comments = await Comment.findById(req.params.id);
+    const comment = await Comment.findById(req.params.id);
 
-    if (!comments || comments.delete_status) return res.status(404).json({ error: "Comment not found" });
-
-    // Validate that required fields are present in req.body
-    if (!req.body.title || !req.body.description) {
-      return res.status(400).json({ error: "Title and description are required" });
+    if (!comment || comment.delete_status) {
+      return res.status(404).json({ error: "Comment not found" });
     }
 
-    // Update the blog with the request data
-    Object.assign(blog, req.body);
-    await blog.save();
+    if (typeof req.body.content === "string") {
+      if (!req.body.content.trim()) {
+        return res.status(400).json({ error: "Content is required" });
+      }
+      comment.content = req.body.content.trim();
+    }
 
-    res.status(200).json({ message: "comments updated", blog });
+    if (typeof req.body.is_active === "boolean") {
+      comment.is_active = req.body.is_active;
+    }
+
+    await comment.save();
+    await comment.populate("creator", "username email");
+
+    res.status(200).json({
+      success: true,
+      message: "Comment updated",
+      comment,
+    });
   } catch (err) {
-    console.error("Error updating blog:", err);
+    console.error("Error updating comment:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-
-
-// Soft delete
 export const deleteComment = async (req, res) => {
   try {
-    const comments = await Comment.findById(req.params.id);
-    if (!comments || comments.delete_status) return res.status(404).json({ error: "Comment not found" });
+    const comment = await Comment.findById(req.params.id);
 
-    comments.delete_status = true;
-    await comments.save();
+    if (!comment || comment.delete_status) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
 
-    res.status(200).json({ message: "comments deleted (soft)",comments:blog });
+    comment.delete_status = true;
+    await comment.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Comment deleted (soft)",
+      comment,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

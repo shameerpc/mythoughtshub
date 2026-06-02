@@ -13,28 +13,24 @@ export default function LoginPage() {
     setFormData({...formData, [e.target.name] : e.target.value})
   }
   const togglePassword = () =>setShowPassword(!showPassword)
-  const handleLogin = async(e) => {
-    
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
     setStatus("loading");
-    // Replace with your real auth call (e.g. NextAuth, Firebase, fetch)
-    try{
-      const res = await loginAdmin(formData)
-      //1.save the token
-      localStorage.setItem("accessToken", res.token)
-      localStorage.setItem("user", res.user)
-      window.location.href = "/admin/dashboard"; 
-    }catch(err){
-      setStatus("error")
+    try {
+      const res = await loginAdmin(formData);
+      localStorage.setItem("accessToken", res.token);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      setMessage("Signed in successfully! Redirecting…");
+      setStatus("success");
+      setTimeout(() => {
+        window.location.href = "/admin/dashboard";
+      }, 1000);
+    } catch (err) {
+      setStatus("error");
       console.error("Login Error:", err.response?.data);
       const message = err.response?.data?.message || err.response?.data?.error || "Invalid email or password.";
-      setMessage(message); 
-      return
-    }finally {
-      
+      setMessage(message);
     }
-    const message = "Signed in successfully! Redirecting…";
-    setMessage(message);
-    setTimeout(() => setStatus("success"), 1200);
   };
 
   return (
@@ -95,85 +91,87 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Email */}
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-1.5">
-              Email
-            </label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={formData.email}
-              name = "email"
-              onChange={handleChange}
-              className="w-full h-11 px-4 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition"
-            />
-          </div>
-
-          {/* Password */}
-          <div className="mb-4">
-            <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-1.5">
-              Password
-            </label>
-            <div className="relative">
+          <form onSubmit={handleLogin}>
+            {/* Email */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-1.5">
+                Email
+              </label>
               <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                name = "password"
-                value={formData.password}
+                type="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                name = "email"
                 onChange={handleChange}
                 className="w-full h-11 px-4 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition"
               />
-              
-              {/* Toggle Eye Button */}
-                <button 
-                  type="button" 
-                  onClick={togglePassword} 
-                  className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none"
-                > 
-                  {showPassword ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  )}
-                </button>
             </div>
-            
-          </div>
 
-          {/* Remember + Forgot */}
-          <div className="flex items-center justify-between mb-6">
-            <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-                className="accent-violet-600 w-3.5 h-3.5"
-              />
-              Remember me
-            </label>
-            <a href="#" className="text-xs text-violet-600 hover:underline">
-              Forgot password?
-            </a>
-          </div>
+            {/* Password */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-400 uppercase tracking-widest mb-1.5">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  name = "password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full h-11 px-4 text-sm bg-gray-50 border border-gray-200 rounded-lg text-gray-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100 transition"
+                />
+                
+                {/* Toggle Eye Button */}
+                  <button 
+                    type="button" 
+                    onClick={togglePassword} 
+                    className="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  > 
+                    {showPassword ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+              </div>
+              
+            </div>
 
-          {/* Sign in button */}
-          <button
-            onClick={handleLogin}
-            disabled={status === "loading"}
-            className={`w-full h-11 rounded-lg text-sm font-medium text-white transition active:scale-95 ${
-               "bg-violet-600 hover:bg-violet-700"
-            } disabled:opacity-60 disabled:cursor-not-allowed`}
-          >
-            {status === "loading"
-              ? "Signing in…"
-              : "Sign in"}
-          </button>
+            {/* Remember + Forgot */}
+            <div className="flex items-center justify-between mb-6">
+              <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="accent-violet-600 w-3.5 h-3.5"
+                />
+                Remember me
+              </label>
+              <button type="button" className="text-xs text-violet-600 hover:underline">
+                Forgot password?
+              </button>
+            </div>
+
+            {/* Sign in button */}
+            <button
+              type="submit"
+              disabled={status === "loading"}
+              className={`w-full h-11 rounded-lg text-sm font-medium text-white transition active:scale-95 ${
+                 "bg-violet-600 hover:bg-violet-700"
+              } disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              {status === "loading"
+                ? "Signing in…"
+                : "Sign in"}
+            </button>
+          </form>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-5">
@@ -196,9 +194,9 @@ export default function LoginPage() {
           {/* Sign up */}
           <p className="text-center text-xs text-gray-400 mt-6">
             Don't have an account?{" "}
-            <a href="#" className="text-violet-600 font-medium hover:underline">
+            <button type="button" className="text-violet-600 font-medium hover:underline">
               Create one free
-            </a>
+            </button>
           </p>
 
         </div>

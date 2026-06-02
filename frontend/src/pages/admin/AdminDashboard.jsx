@@ -1,88 +1,103 @@
-import React from "react";
-// Ensure MessageSquare is imported here
-import { Users, FileText, DollarSign, Bell, MessageSquare } from "lucide-react"; 
+import React, { useEffect, useState } from "react";
+import { BarChart3, FileText, MessageSquare, Package, Star, Users } from "lucide-react";
+import { getAdminStats } from "../../api/admin.api";
+
+const formatNumber = (value) => new Intl.NumberFormat("en-US").format(value || 0);
+const formatDate = (value) => value ? new Date(value).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+
+const StatCard = ({ label, value, icon: Icon, tone }) => (
+  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <p className="text-sm font-medium text-slate-500">{label}</p>
+        <p className="mt-2 text-3xl font-bold text-slate-900">{formatNumber(value)}</p>
+      </div>
+      <div className={`rounded-lg p-3 ${tone}`}>
+        <Icon size={22} />
+      </div>
+    </div>
+  </div>
+);
+
+const ActivityItem = ({ title, subtitle, date }) => (
+  <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-3 last:border-0">
+    <div className="min-w-0">
+      <p className="truncate text-sm font-semibold text-slate-800">{title}</p>
+      <p className="mt-1 truncate text-xs text-slate-500">{subtitle}</p>
+    </div>
+    <span className="shrink-0 text-xs text-slate-400">{formatDate(date)}</span>
+  </div>
+);
 
 const AdminDashboard = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await getAdminStats();
+        setData(response);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load dashboard.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) {
+    return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((i) => <div key={i} className="h-32 animate-pulse rounded-xl bg-slate-200" />)}</div>;
+  }
+
+  if (error) return <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>;
+
+  const stats = data?.stats || {};
+  const recent = data?.recent || {};
+
   return (
     <div className="space-y-6">
-      {/* Page Title */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
-        <button className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm font-medium">
-          Download Report
-        </button>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-500">Live overview from MongoDB.</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Stat Card 1 */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Total Views</p>
-            <h3 className="text-3xl font-bold text-slate-800 mt-1">12,543</h3>
-          </div>
-          <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-            <Users size={24} />
-          </div>
-        </div>
-        {/* Stat Card 2 */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Total Blogs</p>
-            <h3 className="text-3xl font-bold text-slate-800 mt-1">45</h3>
-          </div>
-          <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-            <FileText size={24} />
-          </div>
-        </div>
-        {/* Stat Card 3 */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Affiliate Rev</p>
-            <h3 className="text-3xl font-bold text-slate-800 mt-1">$3,240</h3>
-          </div>
-          <div className="p-3 bg-green-100 text-green-600 rounded-lg">
-            <DollarSign size={24} />
-          </div>
-        </div>
-        {/* Stat Card 4 */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
-          <div>
-            <p className="text-slate-500 text-sm font-medium">Pending Tasks</p>
-            <h3 className="text-3xl font-bold text-slate-800 mt-1">8</h3>
-          </div>
-          <div className="p-3 bg-orange-100 text-orange-600 rounded-lg">
-            <Bell size={24} />
-          </div>
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Users" value={stats.users} icon={Users} tone="bg-blue-50 text-blue-600" />
+        <StatCard label="Blogs" value={stats.blogs} icon={FileText} tone="bg-violet-50 text-violet-600" />
+        <StatCard label="Products" value={stats.products} icon={Package} tone="bg-emerald-50 text-emerald-600" />
+        <StatCard label="Total Views" value={stats.totalViews} icon={BarChart3} tone="bg-amber-50 text-amber-600" />
       </div>
 
-      {/* Recent Activity Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h3 className="font-semibold text-slate-800">Recent Activity</h3>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="flex items-center gap-4">
-            {/* MessageSquare used here */}
-            <div className="p-2 bg-blue-50 rounded-full text-blue-600">
-              <MessageSquare size={18} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-800">New Comment on "React Tips"</p>
-              <p className="text-xs text-slate-500">2 minutes ago</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-green-50 rounded-full text-green-600">
-              <DollarSign size={18} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-800">Affiliate Sale: $50.00</p>
-              <p className="text-xs text-slate-500">1 hour ago</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard label="Comments" value={stats.comments} icon={MessageSquare} tone="bg-sky-50 text-sky-600" />
+        <StatCard label="Reviews" value={stats.reviews} icon={Star} tone="bg-yellow-50 text-yellow-600" />
+        <StatCard label="Pending Moderation" value={(stats.pendingComments || 0) + (stats.pendingReviews || 0)} icon={MessageSquare} tone="bg-rose-50 text-rose-600" />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 font-semibold text-slate-900">Recent Blogs</h2>
+          {recent.blogs?.length ? recent.blogs.map((blog) => (
+            <ActivityItem key={blog._id} title={blog.title} subtitle={blog.creator?.username || "Unknown author"} date={blog.createdAt} />
+          )) : <p className="py-8 text-center text-sm text-slate-500">No blogs yet.</p>}
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 font-semibold text-slate-900">Recent Comments</h2>
+          {recent.comments?.length ? recent.comments.map((comment) => (
+            <ActivityItem key={comment._id} title={comment.content} subtitle={comment.blog?.title || "Unknown blog"} date={comment.createdAt} />
+          )) : <p className="py-8 text-center text-sm text-slate-500">No comments yet.</p>}
+        </section>
+
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 font-semibold text-slate-900">Recent Reviews</h2>
+          {recent.reviews?.length ? recent.reviews.map((review) => (
+            <ActivityItem key={review._id} title={review.title} subtitle={review.product?.name || "Unknown product"} date={review.createdAt} />
+          )) : <p className="py-8 text-center text-sm text-slate-500">No reviews yet.</p>}
+        </section>
       </div>
     </div>
   );

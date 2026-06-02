@@ -13,7 +13,13 @@ import {
 
 // ── helpers ──────────────────────────────────
 const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
+  d ? new Date(d).toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }) : "—";
 
 const stripHtml = (html = "") =>
   html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();

@@ -26,8 +26,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("accessToken"); // ✅ fixed key
-      window.location.href = "/login";
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      const isAdminPath = window.location.pathname.startsWith("/admin");
+      window.location.href = isAdminPath ? "/admin/login" : "/login";
     }
     if (error.response?.status === 403) {
       console.log("🚨 Session expired or invalid token.");

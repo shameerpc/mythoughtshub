@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, Outlet, NavLink } from "r
 import { 
   LayoutDashboard, PenTool, DollarSign, MessageSquare, Menu, LogOut, 
   Search, Bell, X, 
-  Home as HomeIcon 
+  Home as HomeIcon, Users, Star
 } from "lucide-react";
 
 // ==========================================
@@ -33,6 +33,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminBlogs from "./pages/admin/AdminBlogs";
 import AdminAffiliates from "./pages/admin/AdminAffiliates";
 import AdminComments from "./pages/admin/AdminComments";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminReviews from "./pages/admin/AdminReviews";
 import LoginPage from "./pages/admin/Login";
 // ==========================================
 // 3. LAYOUT: USER SIDE (Public Website)
@@ -55,6 +57,21 @@ const UserLayout = () => {
 // ==========================================
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const storedUser = (() => {
+    try { return JSON.parse(localStorage.getItem("user") || "{}"); } catch { return {}; }
+  })();
+
+  const token = localStorage.getItem("accessToken");
+  if (!token || storedUser.role !== "ADMIN") {
+    window.location.href = "/admin/login";
+    return null;
+  }
+
+  const logout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    window.location.href = "/admin/login";
+  };
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans overflow-hidden">
@@ -118,6 +135,17 @@ const AdminLayout = () => {
             <DollarSign size={20} /> Affiliates
           </NavLink>
 
+          <NavLink 
+            to="/admin/users" 
+            className={({ isActive }) => `
+              flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
+              ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}
+            `}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Users size={20} /> Users
+          </NavLink>
+
           {/* Comments Link */}
           <NavLink 
             to="/admin/comments" 
@@ -130,14 +158,25 @@ const AdminLayout = () => {
             <MessageSquare size={20} /> Comments
           </NavLink>
 
+          <NavLink 
+            to="/admin/reviews" 
+            className={({ isActive }) => `
+              flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
+              ${isActive ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}
+            `}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Star size={20} /> Reviews
+          </NavLink>
+
           {/* Bottom Actions */}
           <div className="pt-6 mt-6 border-t border-slate-800 space-y-2">
              <NavLink to="/" className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white">
                 <HomeIcon size={20} /> Back to Website
              </NavLink>
-             <NavLink to="/login" className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-red-900/20 hover:text-red-300">
+             <button onClick={logout} className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-400 hover:bg-red-900/20 hover:text-red-300">
                 <LogOut size={20} /> Logout
-             </NavLink>
+             </button>
           </div>
         </nav>
       </aside>
@@ -170,11 +209,11 @@ const AdminLayout = () => {
             {/* Profile */}
             <div className="flex items-center gap-3 pl-4 md:border-l border-gray-200">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-slate-700">Admin User</p>
-                <p className="text-xs text-gray-500">Super Admin</p>
+                <p className="text-sm font-bold text-slate-700">{storedUser.username || storedUser.email || "Admin"}</p>
+                <p className="text-xs text-gray-500">{storedUser.role || "ADMIN"}</p>
               </div>
               <div className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-sm shadow-md">
-                A
+                {(storedUser.username || storedUser.email || "A").charAt(0).toUpperCase()}
               </div>
             </div>
           </div>
@@ -236,7 +275,9 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="blogs" element={<AdminBlogs />} />
           <Route path="affiliates" element={<AdminAffiliates />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route path="comments" element={<AdminComments />} />
+          <Route path="reviews" element={<AdminReviews />} />
           {/* Redirect /admin to dashboard */}
           <Route index element={<AdminDashboard />} />
         </Route>

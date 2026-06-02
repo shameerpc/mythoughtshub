@@ -7,9 +7,11 @@ const AffiliateCard = ({ product }) => {
   const [isPaused, setIsPaused] = useState(false);
 
   // 1. Normalize Images: Handle both array and single string
-  const images = Array.isArray(product.images) 
-    ? product.images 
-    : (product.image ? [product.image] : ["https://placehold.co/600x400?text=No+Image"]);
+  const images = Array.isArray(product.media) && product.media.length > 0
+    ? product.media.map((item) => item.url)
+    : Array.isArray(product.images) 
+      ? product.images 
+      : (product.image ? [product.image] : ["https://placehold.co/600x400?text=No+Image"]);
 
   // 2. Auto-Rotate Images Logic
   useEffect(() => {

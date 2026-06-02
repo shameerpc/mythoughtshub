@@ -12,12 +12,12 @@ export const register = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) return res.status(400).json({ error: "User already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ username, email, password: hashedPassword });
+    const newUser = new User({ username, email: email.toLowerCase(), password: hashedPassword });
     await newUser.save();
 
     res.status(201).json({ message: "User registered successfully", response: newUser });
@@ -34,7 +34,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(400).json({ error: "User not found" });
 
     // Compare passwords

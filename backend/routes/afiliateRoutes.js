@@ -2,31 +2,24 @@ import express from "express";
 import upload from "../middleware/uploadMiddleware.js";
 import {
   createProduct,
+  deleteProduct,
   getAllProducts,
   getFeaturedProducts,
   getProductBySlug,
   updateProduct,
-  deleteProduct,
 } from "../controllers/afiliateController.js";
+import authMiddleware from "../middleware/autherization.js";
+import requireAdmin from "../middleware/requireAdmin.js";
 
 const router = express.Router();
+const adminOnly = [authMiddleware, requireAdmin];
 
-// ✅ CREATE with multiple files
-router.post("/", upload.array("media", 10), createProduct);
-
-// GET ALL
 router.get("/", getAllProducts);
-
-// FEATURED
 router.get("/featured", getFeaturedProducts);
-
-// SINGLE
 router.get("/:slug", getProductBySlug);
 
-// ✅ UPDATE with optional files
-router.put("/:id", upload.array("media", 10), updateProduct);
-
-// DELETE
-router.delete("/:id", deleteProduct);
+router.post("/", adminOnly, upload.array("media", 10), createProduct);
+router.put("/:id", adminOnly, upload.array("media", 10), updateProduct);
+router.delete("/:id", adminOnly, deleteProduct);
 
 export default router;

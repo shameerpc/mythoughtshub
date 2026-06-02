@@ -26,13 +26,13 @@ router.get("/", getAllBlogs);
 
 // CRITICAL: /category/:slug must come BEFORE /:id
 router.get("/category/:slug", getBlogsByCategorySlug); 
+router.get("/user/me", authMiddleware, getMyBlogs);
 
 router.get("/:id", getBlogById);
 
 
 // Delete
+router.delete("/:id", authMiddleware, deleteBlog);
 router.post("/:id", authMiddleware, deleteBlog);
-
-router.get("/user/me", authMiddleware, getMyBlogs);
 
 export default router;
