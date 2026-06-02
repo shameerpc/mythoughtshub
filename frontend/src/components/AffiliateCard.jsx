@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { MoveLeft, MoveRight, ShoppingBag, Star, Flame } from "lucide-react";
 
+const normalizeUrl = (url) => {
+  if (!url) return "#";
+  return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+};
+
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return "https://placehold.co/600x400?text=No+Image";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  return imagePath.startsWith("http") ? imagePath : `${API_URL}${imagePath}`;
+};
+
 const AffiliateCard = ({ product }) => {
   // State for Image Carousel
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -8,10 +19,10 @@ const AffiliateCard = ({ product }) => {
 
   // 1. Normalize Images: Handle both array and single string
   const images = Array.isArray(product.media) && product.media.length > 0
-    ? product.media.map((item) => item.url)
+    ? product.media.map((item) => getImageUrl(item.url))
     : Array.isArray(product.images) 
-      ? product.images 
-      : (product.image ? [product.image] : ["https://placehold.co/600x400?text=No+Image"]);
+      ? product.images.map((img) => getImageUrl(img)) 
+      : (product.image ? [getImageUrl(product.image)] : [getImageUrl(null)]);
 
   // 2. Auto-Rotate Images Logic
   useEffect(() => {
@@ -117,7 +128,7 @@ const AffiliateCard = ({ product }) => {
         {/* ────── HOVER "VIEW DEAL" OVERLAY ────── */}
         <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center z-20">
           <a 
-            href={product.affiliateLink} 
+            href={normalizeUrl(product.affiliateLink)} 
             target="_blank" 
             rel="noreferrer"
             className="relative inline-flex items-center gap-2 px-8 py-3 bg-white text-indigo-900 font-bold rounded-full shadow-[0_0_20px_rgba(255,255,255,0.4)] transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 hover:scale-105 active:scale-95"

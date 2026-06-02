@@ -1,5 +1,10 @@
 import express from "express";
-import { createReview, getReviews } from "../controllers/reviewController.js";
+import {
+  getQuestions,
+  askQuestion,
+  answerQuestion,
+  upvoteAnswer,
+} from "../controllers/qnaController.js";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();
@@ -12,16 +17,18 @@ const optionalAuth = (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.user = {
         ...decoded,
-        _id: decoded.id
+        _id: decoded.id,
       };
     } catch (err) {
-      // Ignore token verification errors, proceed as guest
+      // ignore, guest
     }
   }
   next();
 };
 
-router.get("/", getReviews);
-router.post("/", optionalAuth, createReview);
+router.get("/:blogId/questions", getQuestions);
+router.post("/:blogId/questions", optionalAuth, askQuestion);
+router.post("/questions/:questionId/answers", optionalAuth, answerQuestion);
+router.post("/questions/:questionId/answers/:answerId/upvote", optionalAuth, upvoteAnswer);
 
 export default router;

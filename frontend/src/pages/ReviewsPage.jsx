@@ -1,7 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Star } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import { getAffiliateProducts } from "../api/affiliate.api";
 import { createReview, getReviews } from "../api/review.api";
+
+const normalizeUrl = (url) => {
+  if (!url) return "#";
+  return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+};
+
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return "https://placehold.co/600x400?text=No+Image";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  return imagePath.startsWith("http") ? imagePath : `${API_URL}${imagePath}`;
+};
 
 const StarRating = ({ rating }) => (
   <div className="flex text-yellow-400">
@@ -18,8 +30,14 @@ const ReviewsPage = () => {
   const [loading, setLoading] = useState(true);
   const [filterRating, setFilterRating] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  const [productSearch, setProductSearch] = useState("");
+  const [reviewSearch, setReviewSearch] = useState("");
   const [form, setForm] = useState({ userName: "", email: "", rating: 5, title: "", body: "" });
   const [error, setError] = useState("");
+
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const productIdFromUrl = queryParams.get("product");
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -27,13 +45,14 @@ const ReviewsPage = () => {
         const response = await getAffiliateProducts();
         const list = response.result || response.response || [];
         setProducts(list);
-        if (list[0]?._id) setSelectedProductId(list[0]._id);
+        const initialSelected = list.find((p) => p._id === productIdFromUrl) || list[0];
+        if (initialSelected?._id) setSelectedProductId(initialSelected._id);
       } catch (err) {
         setError("Failed to load products.");
       }
     };
     loadProducts();
-  }, []);
+  }, [productIdFromUrl]);
 
   useEffect(() => {
     if (!selectedProductId) {
@@ -57,17 +76,30 @@ const ReviewsPage = () => {
 
   const currentProduct = products.find((product) => product._id === selectedProductId);
 
+  const filteredProducts = useMemo(() => {
+    if (!productSearch.trim()) return products;
+    const s = productSearch.toLowerCase();
+    return products.filter((p) => p.name.toLowerCase().includes(s));
+  }, [products, productSearch]);
+
   const filteredReviews = useMemo(() => {
     let result = [...reviews];
     if (filterRating !== "all") result = result.filter((review) => review.rating === Number(filterRating));
+    if (reviewSearch.trim()) {
+      const s = reviewSearch.toLowerCase();
+      result = result.filter((review) =>
+        (review.title || "").toLowerCase().includes(s) ||
+        (review.body || "").toLowerCase().includes(s) ||
+        (review.userName || "").toLowerCase().includes(s)
+      );
+    }
     if (sortBy === "highest") result.sort((a, b) => b.rating - a.rating);
     if (sortBy === "helpful") result.sort((a, b) => (b.helpful || 0) - (a.helpful || 0));
     if (sortBy === "recent") result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     return result;
-  }, [reviews, filterRating, sortBy]);
+  }, [reviews, filterRating, sortBy, reviewSearch]);
 
   const averageRating = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
-  const media = currentProduct?.media?.[0];
 
   const submitReview = async (e) => {
     e.preventDefault();
@@ -77,7 +109,7 @@ const ReviewsPage = () => {
       setReviews((prev) => [response.result, ...prev]);
       setForm({ userName: "", email: "", rating: 5, title: "", body: "" });
     } catch (err) {
-      setError(err.response?.data?.message || "Login is required to post a review.");
+      setError(err.response?.data?.message || "Failed to post review. Please try again.");
     }
   };
 
@@ -98,12 +130,35 @@ const ReviewsPage = () => {
             <section className="mb-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="grid gap-6 md:grid-cols-[220px_1fr]">
                 <div className="h-52 overflow-hidden rounded-xl bg-slate-100">
-                  {media ? (media.type === "video" ? <video src={media.url} className="h-full w-full object-cover" /> : <img src={media.url} alt={currentProduct?.name} className="h-full w-full object-cover" />) : null}
+                  {currentProduct ? (
+                    currentProduct.media?.[0]?.type === "video" ? (
+                      <video src={getImageUrl(currentProduct.media[0].url)} className="h-full w-full object-cover" />
+                    ) : (
+                      <img src={getImageUrl(currentProduct.media?.[0]?.url || currentProduct.image)} alt={currentProduct.name} className="h-full w-full object-cover" />
+                    )
+                  ) : null}
                 </div>
                 <div>
-                  <select className="mb-4 rounded-lg border border-slate-300 px-3 py-2 text-sm" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)}>
-                    {products.map((product) => <option key={product._id} value={product._id}>{product.name}</option>)}
-                  </select>
+                  <div className="mb-4 flex flex-wrap gap-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="Search product..."
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm w-48 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                    />
+                    <select
+                      className="rounded-lg border border-slate-300 px-3 py-2 text-sm max-w-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                      value={selectedProductId}
+                      onChange={(e) => setSelectedProductId(e.target.value)}
+                    >
+                      {filteredProducts.map((product) => (
+                        <option key={product._id} value={product._id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <h2 className="text-2xl font-bold text-slate-900">{currentProduct?.name}</h2>
                   <p className="mt-2 max-w-3xl text-slate-600">{currentProduct?.description}</p>
                   <div className="mt-5 flex flex-wrap items-center gap-5">
@@ -112,7 +167,7 @@ const ReviewsPage = () => {
                       <StarRating rating={averageRating} />
                     </div>
                     <div className="text-sm text-slate-500">{reviews.length} reviews</div>
-                    <a href={currentProduct?.affiliateLink} target="_blank" rel="noreferrer" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">View Deal</a>
+                    <a href={normalizeUrl(currentProduct?.affiliateLink)} target="_blank" rel="noreferrer" className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white">View Deal</a>
                   </div>
                 </div>
               </div>
@@ -121,12 +176,19 @@ const ReviewsPage = () => {
             <div className="grid gap-8 lg:grid-cols-[320px_1fr]">
               <aside className="space-y-5">
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="font-semibold text-slate-900">Filters</h3>
-                  <select className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value={filterRating} onChange={(e) => setFilterRating(e.target.value)}>
+                  <h3 className="font-semibold text-slate-900 mb-3">Filters</h3>
+                  <input
+                    type="text"
+                    placeholder="Search reviews..."
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-500 focus:outline-none mb-3"
+                    value={reviewSearch}
+                    onChange={(e) => setReviewSearch(e.target.value)}
+                  />
+                  <select className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm mb-3" value={filterRating} onChange={(e) => setFilterRating(e.target.value)}>
                     <option value="all">All ratings</option>
                     {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} stars</option>)}
                   </select>
-                  <select className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <select className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
                     <option value="recent">Most recent</option>
                     <option value="highest">Highest rated</option>
                     <option value="helpful">Most helpful</option>

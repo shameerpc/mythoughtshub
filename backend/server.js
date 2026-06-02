@@ -1,6 +1,8 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import fs from "fs"; // Import fs to check/create directories
 import path from "path";
 import connectDB from "./config/connection.js";
@@ -14,8 +16,7 @@ import afiliateRoutes from "./routes/afiliateRoutes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import adminRoutes from "./routes/adminRoutes.js"
 import reviewRoutes from "./routes/reviewRoutes.js";
-// 1. Load Environment Variables
-dotenv.config();
+import qnaRoutes from "./routes/qnaRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -69,6 +70,7 @@ app.use("/api/affiliate", afiliateRoutes);
 app.use("/api/afiliate", afiliateRoutes);  // Spelling alias
 app.use("/api/affleate", afiliateRoutes);  // Spelling alias
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/qna", qnaRoutes);
 
 
 app.use("/api/contact", contactRoutes);

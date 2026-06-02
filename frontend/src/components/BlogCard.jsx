@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 
 // --- Helper Functions ---
 
-const getImageUrl = (imagePath) => {
-  if (!imagePath) return "https://picsum.photos/seed/blog/800/600";
+const getImageUrl = (imagePath, seed = "blog") => {
+  if (!imagePath) return `https://picsum.photos/seed/${seed}/800/600`;
   
   // ✅ FIX 1: Changed default port to 4000 to match your server.js
   const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
@@ -102,10 +102,10 @@ export default function BlogCard({ blog }) {
           {imagesList.map((img, idx) => (
             <div key={idx} className="relative h-full min-w-full">
               <img
-                src={`${getImageUrl(img.url)}${cacheBuster}`}
+                src={`${getImageUrl(img.url, blog._id || encodeURIComponent(blog.title) || "blog")}${cacheBuster}`}
                 alt={img.alt || blog.title}
                 className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110"
-                onError={(e) => { e.target.src = "https://picsum.photos/seed/error/800/600"; }}
+                onError={(e) => { e.target.src = `https://picsum.photos/seed/${blog._id || encodeURIComponent(blog.title) || "error"}/800/600`; }}
               />
             </div>
           ))}

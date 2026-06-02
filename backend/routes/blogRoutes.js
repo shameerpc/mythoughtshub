@@ -6,12 +6,31 @@ import {
   updateBlog,
   deleteBlog,
   getBlogsByCategorySlug,
-  getMyBlogs
+  getMyBlogs,
+  likeBlog
 } from "../controllers/blogController.js";
 import upload from "../middleware/uploadMiddleware.js";
 import authMiddleware from "../middleware/autherization.js";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
+
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = {
+        ...decoded,
+        _id: decoded.id
+      };
+    } catch (err) {
+      // ignore and proceed as guest
+    }
+  }
+  next();
+};
 
 
 
@@ -29,6 +48,7 @@ router.get("/category/:slug", getBlogsByCategorySlug);
 router.get("/user/me", authMiddleware, getMyBlogs);
 
 router.get("/:id", getBlogById);
+router.post("/:id/like", optionalAuth, likeBlog);
 
 
 // Delete

@@ -170,6 +170,7 @@ export const getAllBlogs = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;     // Items per page (default 10)
     const search = req.query.search || "";             // Search keyword
     const category = req.query.category || "";         // Category ID filter (optional)
+    const sort = req.query.sort || "newest";           // Sort order
 
     // 2. Build the Query Object (Filtering)
     const query = {};
@@ -189,6 +190,14 @@ export const getAllBlogs = async (req, res) => {
       query.category = category;
     }
 
+    // Build Sort Object
+    let sortOption = { createdAt: -1 };
+    if (sort === "oldest") {
+      sortOption = { createdAt: 1 };
+    } else if (sort === "trending") {
+      sortOption = { views: -1 };
+    }
+
     // 3. Calculate Total Count (for pagination metadata)
     const total = await Blog.countDocuments(query);
 
@@ -196,7 +205,7 @@ export const getAllBlogs = async (req, res) => {
     const blogs = await Blog.find(query)
       .populate("category", "name slug") // Get category details
       .populate("creator", "name username avatar") // Get creator details
-      .sort({ createdAt: -1 }) // Newest first
+      .sort(sortOption)
       .skip((page - 1) * limit) // Skip previous pages
       .limit(limit); // Limit results per page
 
@@ -326,5 +335,50 @@ export const getMyBlogs = async (req, res) => {
   } catch (error) {
     console.error("Error fetching my blogs:", error);
     res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const likeBlog = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const blog = await Blog.findOne({ _id: id, delete_status: false });
+    if (!blog) {
+      return res.status(404).json({ success: false, message: "Blog not found" });
+    }
+
+    const userId = req.user?._id;
+    const ip = req.ip || req.headers["x-forwarded-for"] || "unknown-ip";
+
+    let hasLiked = false;
+
+    if (userId) {
+      const index = blog.likedBy.indexOf(userId);
+      if (index > -1) {
+        blog.likedBy.splice(index, 1);
+        blog.likes = Math.max(0, blog.likes - 1);
+        hasLiked = false;
+      } else {
+        blog.likedBy.push(userId);
+        blog.likes += 1;
+        hasLiked = true;
+      }
+    } else {
+      const index = blog.likedIPs.indexOf(ip);
+      if (index > -1) {
+        blog.likedIPs.splice(index, 1);
+        blog.likes = Math.max(0, blog.likes - 1);
+        hasLiked = false;
+      } else {
+        blog.likedIPs.push(ip);
+        blog.likes += 1;
+        hasLiked = true;
+      }
+    }
+
+    await blog.save();
+    res.status(200).json({ success: true, likes: blog.likes, hasLiked });
+  } catch (error) {
+    console.error("Like Blog Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

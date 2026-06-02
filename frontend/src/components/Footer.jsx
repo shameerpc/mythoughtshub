@@ -78,6 +78,7 @@ export default function Footer() {
             ) : (
               <li><Link to="/categories/tech" className="link link-hover">Technology</Link></li>
             )}
+            <li><Link to="/deals" className="link link-hover">Deals</Link></li>
             <li><Link to="/reviews" className="link link-hover">Reviews</Link></li>
           </ul>
         </div>

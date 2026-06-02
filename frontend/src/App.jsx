@@ -22,6 +22,7 @@ import Profile from "./pages/Profile";
 import CategoriesPage from "./pages/CategoriesPage";
 import CategoryPage from "./pages/CategoryPage";
 import ReviewsPage from "./pages/ReviewsPage"; 
+import DealsPage from "./pages/DealsPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Disclaimer from "./pages/Disclaimer";
 import Terms from "./pages/Terms";
@@ -260,6 +261,7 @@ function App() {
           <Route path="register" element={<Register />} />
           <Route path="profile" element={<Profile />} />
           <Route path="reviews" element={<ReviewsPage />} />
+          <Route path="deals" element={<DealsPage />} />
           <Route path="privacy" element={<PrivacyPolicy />} />
           <Route path="disclaimer" element={<Disclaimer />} />
           <Route path="terms" element={<Terms />} />

@@ -5,9 +5,7 @@ import { getAffiliateProducts } from "./affiliate.api";
 // We ignore the 'params' argument to force a clean call like Postman
 export const fetchBlogs = async (params = {}) => {
   try {
-    // ✅ SIMPLE CALL: No params, no cleaning, nothing.
-    // This sends: GET /api/blog
-    const response = await api.get("/api/blog");
+    const response = await api.get("/api/blog", { params });
     
     console.log("Raw API Response:", response); // Check console
     return response.data; 

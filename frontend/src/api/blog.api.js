@@ -38,3 +38,9 @@ export const getMyBlogs = async () => {
   const response = await api.get("/api/blog/user/me");
   return response.data;
 };
+
+// Like Blog
+export const likeBlogApi = async (id) => {
+  const response = await api.post(`/api/blog/${id}/like`);
+  return response.data;
+};

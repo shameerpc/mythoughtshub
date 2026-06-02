@@ -13,6 +13,17 @@ import {
   ChevronRight, X, Sparkles, PenLine, Loader2
 } from "lucide-react";
 
+const normalizeUrl = (url) => {
+  if (!url) return "#";
+  return url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
+};
+
+const getImageUrl = (imagePath) => {
+  if (!imagePath) return "https://placehold.co/600x400?text=No+Image";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  return imagePath.startsWith("http") ? imagePath : `${API_URL}${imagePath}`;
+};
+
 // ─── Category Icon Mapping ────────────────────────────────────────────────────
 const getCategoryIcon = (name) => {
   const n = name.toLowerCase();
@@ -470,40 +481,52 @@ export default function Home() {
   // SUB-COMPONENTS
   // ─────────────────────────────────────────────────────────────────────────────
 
-  const FeaturedProduct = ({ product }) => (
-    <div className="relative overflow-hidden transition-all duration-300 transform bg-white shadow-xl rounded-2xl hover:-translate-y-2 hover:shadow-2xl lg:col-span-2 group">
-      <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-primary/10 to-secondary/10 group-hover:opacity-100" />
-      <div className="relative flex flex-col items-center gap-8 p-8 md:flex-row">
-        <div className="flex-1 space-y-4 text-center md:text-left">
-          <span className="inline-block px-3 py-1 text-xs font-bold tracking-widest text-white uppercase rounded-full shadow-sm bg-primary">
-            🔥 Hot Deal
-          </span>
-          <h3 className="text-2xl font-extrabold leading-tight text-base-content">{product.name}</h3>
-          <p className="text-sm leading-relaxed text-gray-500 line-clamp-2">{product.description}</p>
-          <a
-            href={product.affiliateLink}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center px-6 py-3 font-bold text-white transition-all rounded-full shadow-lg bg-primary hover:bg-primary-focus hover:shadow-xl"
-          >
-            View Deal
-            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </a>
-        </div>
-        <div className="relative flex justify-center flex-shrink-0 w-full md:w-auto">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/20 to-secondary/20 blur-2xl" />
-          <img
-            src={product.image || "https://placehold.co/600x600?text=No+Image"}
-            alt={product.name}
-            className="relative z-10 object-contain w-full h-48 transition-transform duration-500 md:h-64 mix-blend-multiply drop-shadow-2xl group-hover:scale-105"
-            onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x600?text=Image+Error"; }}
-          />
+  const FeaturedProduct = ({ product }) => {
+    const featImage = product.media?.[0]?.url || product.image;
+    const isVideo = product.media?.[0]?.type === "video";
+    return (
+      <div className="relative overflow-hidden transition-all duration-300 transform bg-white shadow-xl rounded-2xl hover:-translate-y-2 hover:shadow-2xl lg:col-span-2 group">
+        <div className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-primary/10 to-secondary/10 group-hover:opacity-100" />
+        <div className="relative flex flex-col items-center gap-8 p-8 md:flex-row">
+          <div className="flex-1 space-y-4 text-center md:text-left">
+            <span className="inline-block px-3 py-1 text-xs font-bold tracking-widest text-white uppercase rounded-full shadow-sm bg-primary">
+              🔥 Hot Deal
+            </span>
+            <h3 className="text-2xl font-extrabold leading-tight text-base-content">{product.name}</h3>
+            <p className="text-sm leading-relaxed text-gray-500 line-clamp-2">{product.description}</p>
+            <a
+              href={normalizeUrl(product.affiliateLink)}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center px-6 py-3 font-bold text-white transition-all rounded-full shadow-lg bg-primary hover:bg-primary-focus hover:shadow-xl"
+            >
+              View Deal
+              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+          <div className="relative flex justify-center flex-shrink-0 w-full md:w-auto">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary/20 to-secondary/20 blur-2xl" />
+            {isVideo ? (
+              <video
+                src={getImageUrl(featImage)}
+                className="relative z-10 object-cover w-full h-48 transition-transform duration-500 md:h-64 rounded-xl"
+                controls
+              />
+            ) : (
+              <img
+                src={getImageUrl(featImage)}
+                alt={product.name}
+                className="relative z-10 object-contain w-full h-48 transition-transform duration-500 md:h-64 mix-blend-multiply drop-shadow-2xl group-hover:scale-105"
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x600?text=Image+Error"; }}
+              />
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const CategoryCard = ({ cat }) => (
     <Link
@@ -722,13 +745,13 @@ export default function Home() {
                           {aiResponse.products.map((prod) => (
                             <a
                               key={prod._id || prod.id}
-                              href={prod.affiliateLink}
+                              href={normalizeUrl(prod.affiliateLink)}
                               target="_blank"
                               rel="noreferrer"
                               className="flex items-center gap-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700 hover:border-primary/50 hover:bg-slate-800 transition-all group"
                             >
                               <img
-                                src={prod.image}
+                                src={getImageUrl(prod.media?.[0]?.url || prod.image)}
                                 alt={prod.name}
                                 className="w-16 h-16 rounded-lg object-cover bg-white flex-shrink-0"
                                 onError={(e) => { e.target.src = "https://placehold.co/100x100?text=Img"; }}
@@ -790,7 +813,7 @@ export default function Home() {
                 <h2 className="mt-2 text-4xl font-bold text-base-content">🔥 Top Deals</h2>
                 <p className="mt-2 text-gray-500">Hand-picked products just for you.</p>
               </div>
-              <Link to="/reviews" className="items-center hidden gap-2 font-bold md:flex text-primary hover:underline">
+              <Link to="/deals" className="flex items-center gap-2 font-bold text-primary hover:underline">
                 View All Deals →
               </Link>
             </div>

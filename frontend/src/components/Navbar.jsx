@@ -86,6 +86,7 @@ export default function Navbar() {
             <ul className="absolute left-0 z-50 w-64 p-2 border shadow-xl top-16 menu menu-sm dropdown-content bg-base-100 text-base-content rounded-box border-base-200">
               <li><Link to="/" onClick={closeMobileMenu}>Home</Link></li>
               <li><Link to="/blog" onClick={closeMobileMenu}>Blog</Link></li>
+              <li><Link to="/deals" onClick={closeMobileMenu}>Deals</Link></li>
               
               <li>
                 <details>
@@ -138,6 +139,7 @@ export default function Navbar() {
         <ul className="gap-2 px-1 menu menu-horizontal">
           <li><Link to="/" className="font-medium transition-colors hover:text-primary">Home</Link></li>
           <li><Link to="/blog" className="font-medium transition-colors hover:text-primary">Blog</Link></li>
+          <li><Link to="/deals" className="font-medium transition-colors hover:text-primary">Deals</Link></li>
           
           <li>
             <details>
