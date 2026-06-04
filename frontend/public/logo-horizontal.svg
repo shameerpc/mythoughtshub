@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 100" width="100%" height="100%">
+  <defs>
+    <!-- Core Brand Gradient -->
+    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+    
+    <!-- Soft Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Left: Interlocking Thought Network Icon -->
+  <g transform="translate(10, 10)">
+    <!-- Connected Network Lines -->
+    <path d="M 24,40 L 40,24 L 56,40 L 40,56 Z" fill="none" stroke="url(#logo-grad)" stroke-width="3" stroke-linejoin="round" opacity="0.4" />
+    <path d="M 40,24 L 40,56" fill="none" stroke="url(#logo-grad)" stroke-width="2" stroke-dasharray="2 3" opacity="0.6" />
+    
+    <!-- Thought Bubble Outer Rings -->
+    <path d="M 40,12 A 28,28 0 0,1 68,40 A 28,28 0 0,1 40,68 A 28,28 0 0,1 18,56 L 12,60 L 14,50 A 28,28 0 0,1 12,40 A 28,28 0 0,1 40,12 Z" 
+          fill="none" 
+          stroke="url(#logo-grad)" 
+          stroke-width="5.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+
+    <!-- Core Network Nodes -->
+    <circle cx="40" cy="24" r="4.5" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="40" cy="24" r="3" fill="#2563EB" />
+
+    <circle cx="24" cy="40" r="4.5" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="24" cy="40" r="3" fill="#2563EB" />
+
+    <circle cx="56" cy="40" r="4.5" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="56" cy="40" r="3" fill="#7C3AED" />
+
+    <circle cx="40" cy="56" r="4.5" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="40" cy="56" r="3" fill="#7C3AED" />
+    
+    <!-- Central Idea Core -->
+    <circle cx="40" cy="40" r="6" fill="url(#logo-grad)" />
+    <circle cx="40" cy="40" r="2.2" fill="#FFFFFF" />
+  </g>
+
+  <!-- Right: Premium Typography -->
+  <g transform="translate(100, 0)">
+    <!-- "MyThoughts" - Sleek bold dark text -->
+    <text x="0" y="62" 
+          font-family="system-ui, -apple-system, 'SF Pro Display', Roboto, Helvetica, sans-serif" 
+          font-size="44" 
+          font-weight="800" 
+          fill="#1E293B" 
+          letter-spacing="-0.5px">MyThoughts</text>
+          
+    <!-- "Hub" - Gradient color accent -->
+    <text x="264" y="62" 
+          font-family="system-ui, -apple-system, 'SF Pro Display', Roboto, Helvetica, sans-serif" 
+          font-size="44" 
+          font-weight="800" 
+          fill="url(#logo-grad)" 
+          letter-spacing="-0.5px">Hub</text>
+  </g>
+</svg>

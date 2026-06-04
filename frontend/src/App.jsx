@@ -92,7 +92,7 @@ const AdminLayout = () => {
         lg:relative lg:translate-x-0
       `}>
         <div className="flex items-center justify-between h-16 bg-slate-950 shadow-md px-6">
-          <span className="text-xl font-bold tracking-wider text-primary">MYTHOU<span className="text-white">GHTSHUB</span></span>
+          <img src="/logo-horizontal-dark.svg" alt="MyThoughtsHub" className="h-7 w-auto" />
           <button className="lg:hidden text-gray-400" onClick={() => setSidebarOpen(false)}>
             {/* X Icon imported correctly above */}
             <X size={20} />

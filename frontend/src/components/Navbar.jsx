@@ -130,8 +130,8 @@ export default function Navbar() {
           )}
         </div>
 
-        <Link to="/" className="text-xl font-bold tracking-wide text-white normal-case transition-transform duration-200 btn btn-ghost md:text-2xl hover:scale-105">
-          🚀 MyThoughtsHub
+        <Link to="/" className="flex items-center gap-2 px-2 transition-transform duration-200 hover:scale-105">
+          <img src="/logo-horizontal-dark.svg" alt="MyThoughtsHub" className="h-8 md:h-9 w-auto" />
         </Link>
       </div>
 

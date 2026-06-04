@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200" width="100%" height="100%">
+  <defs>
+    <!-- Core Brand Gradient -->
+    <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+    
+    <!-- Soft Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Top: Interlocking Thought Network Icon (Centered) -->
+  <g transform="translate(110, 10)">
+    <!-- Connected Network Lines -->
+    <path d="M 30,50 L 50,30 L 70,50 L 50,70 Z" fill="none" stroke="url(#logo-grad)" stroke-width="4" stroke-linejoin="round" opacity="0.4" />
+    <path d="M 50,30 L 50,70" fill="none" stroke="url(#logo-grad)" stroke-width="3" stroke-dasharray="2 4" opacity="0.6" />
+    
+    <!-- Thought Bubble Outer Rings -->
+    <path d="M 50,15 A 35,35 0 0,1 85,50 A 35,35 0 0,1 50,85 A 35,35 0 0,1 22,70 L 15,75 L 18,62 A 35,35 0 0,1 15,50 A 35,35 0 0,1 50,15 Z" 
+          fill="none" 
+          stroke="url(#logo-grad)" 
+          stroke-width="7" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" />
+
+    <!-- Core Network Nodes -->
+    <circle cx="50" cy="30" r="6" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="50" cy="30" r="4" fill="#2563EB" />
+
+    <circle cx="30" cy="50" r="6" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="30" cy="50" r="4" fill="#2563EB" />
+
+    <circle cx="70" cy="50" r="6" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="70" cy="50" r="4" fill="#7C3AED" />
+
+    <circle cx="50" cy="70" r="6" fill="#FFFFFF" filter="url(#glow)" />
+    <circle cx="50" cy="70" r="4" fill="#7C3AED" />
+    
+    <!-- Central Idea Core -->
+    <circle cx="50" cy="50" r="8" fill="url(#logo-grad)" />
+    <circle cx="50" cy="50" r="3" fill="#FFFFFF" />
+  </g>
+
+  <!-- Bottom: Centered Text -->
+  <g transform="translate(160, 155)">
+    <!-- Text Centered -->
+    <text x="0" y="0" 
+          font-family="system-ui, -apple-system, 'SF Pro Display', Roboto, Helvetica, sans-serif" 
+          font-size="28" 
+          font-weight="800" 
+          text-anchor="middle"
+          fill="#1E293B" 
+          letter-spacing="-0.5px">
+      MyThoughts<tspan fill="url(#logo-grad)">Hub</tspan>
+    </text>
+  </g>
+</svg>
