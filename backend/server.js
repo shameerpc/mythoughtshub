@@ -44,9 +44,10 @@ app.use("/uploads", express.static(uploadDir));
 // 5. CORS CONFIGURATION
 const allowedOrigins = [
   process.env.FRONTEND_URL, 
+  "https://mythoughtshub.eu.cc", // Explicitly include the production frontend URL
   "http://localhost:3000",  
   "http://localhost:5173"   
-];
+].filter(Boolean); // Filter out undefined values
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -54,7 +55,8 @@ app.use(cors({
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error("Not allowed by CORS"));
+      // Return null, false to reject request gracefully rather than throwing a 500 error
+      callback(null, false);
     }
   },
   credentials: true

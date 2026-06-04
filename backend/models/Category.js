@@ -26,9 +26,9 @@ const categorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ AUTO GENERATE UNIQUE SLUG
+// ✅ AUTO GENERATE UNIQUE SLUG (FIXED)
 categorySchema.pre("save", async function (next) {
-  if (this.name) {
+  if (this.isModified("name") || !this.slug) {
     let baseSlug = this.name
       .toLowerCase()
       .trim()
@@ -38,8 +38,8 @@ categorySchema.pre("save", async function (next) {
     let slug = baseSlug;
     let count = 1;
 
-    // ensure unique slug
-    while (await mongoose.models.Category.findOne({ slug })) {
+    // ensure unique slug (exclude current document itself)
+    while (await mongoose.models.Category.findOne({ slug, _id: { $ne: this._id } })) {
       slug = `${baseSlug}-${count++}`;
     }
 
