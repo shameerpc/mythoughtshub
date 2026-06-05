@@ -17,6 +17,8 @@ import contactRoutes from "./routes/contact.routes.js";
 import adminRoutes from "./routes/adminRoutes.js"
 import reviewRoutes from "./routes/reviewRoutes.js";
 import qnaRoutes from "./routes/qnaRoutes.js";
+import shortUrlRoutes from "./routes/shortUrlRoutes.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -76,6 +78,7 @@ app.use("/api/qna", qnaRoutes);
 
 
 app.use("/api/contact", contactRoutes);
+app.use(shortUrlRoutes);
 
 // 7. Global Error Handling (Good Practice)
 app.use((err, req, res, next) => {
