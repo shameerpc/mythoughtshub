@@ -62,6 +62,71 @@ const affiliateSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+
+    // 📌 Pinterest SEO & Open Graph fields
+    pinTitle: {
+      type: String,
+      maxLength: 100,
+    },
+    pinDescription: {
+      type: String,
+      maxLength: 500,
+    },
+    pinAltText: {
+      type: String,
+    },
+    pinTags: {
+      type: [String],
+      default: [],
+    },
+    pinImage: {
+      url: String,
+      type: {
+        type: String,
+        default: "image",
+      },
+      public_id: String,
+    },
+    ogTitle: {
+      type: String,
+    },
+    ogDescription: {
+      type: String,
+    },
+    ogImage: {
+      url: String,
+      type: {
+        type: String,
+        default: "image",
+      },
+      public_id: String,
+    },
+
+    // 🤖 AI SEO generated metadata
+    socialSharing: {
+      pinterest: String,
+      facebook: String,
+      linkedin: String,
+      twitter: String,
+      whatsapp: String,
+    },
+    imageSeo: {
+      filename: String,
+      altText: String,
+      title: String,
+      caption: String,
+    },
+    seoScore: {
+      pinterestScore: { type: Number, default: 0 },
+      ogScore: { type: Number, default: 0 },
+      imageScore: { type: Number, default: 0 },
+      overallScore: { type: Number, default: 0 },
+    },
+    trendSuggestions: {
+      keywords: { type: [String], default: [] },
+      tags: { type: [String], default: [] },
+      contentAngles: { type: [String], default: [] },
+    },
   },
   { timestamps: true }
 );

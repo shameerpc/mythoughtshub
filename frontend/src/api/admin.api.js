@@ -84,3 +84,8 @@ export const deleteAdminAffiliate = async (id) => {
   const response = await api.delete(`/api/admin/affiliates/${id}`);
   return response.data;
 };
+
+export const generateAdminAffiliateSeo = async (data) => {
+  const response = await api.post("/api/admin/affiliates/generate-seo", data);
+  return response.data;
+};

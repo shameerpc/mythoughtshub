@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { getAffiliateProducts } from "../api/affiliate.api";
 import { getShortUrl } from "../api/shorten.api";
+import { Helmet } from "react-helmet-async";
 
 const normalizeUrl = (url) => {
   if (!url) return "#";
@@ -174,7 +175,7 @@ const DealsPageCard = ({ product, onShare, onClick }) => {
             >
               <img
                 src={img}
-                alt={`${product.name} ${idx + 1}`}
+                alt={product.pinAltText || product.name || `Product image ${idx + 1}`}
                 className="object-cover w-full h-full"
                 onError={(e) => {
                   e.target.onerror = null;
@@ -325,6 +326,16 @@ const ShareModal = ({ isOpen, onClose, product }) => {
       )
     },
     {
+      name: "Telegram",
+      color: "bg-[#0088cc] hover:bg-[#0077b5]",
+      url: `https://t.me/share/url?url=${encodeURIComponent(shortUrl)}&text=${encodeURIComponent(shareText)}`,
+      icon: (
+        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.87 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.46c.538-.196 1.006.128.832.909z"/>
+        </svg>
+      )
+    },
+    {
       name: "Pinterest",
       color: "bg-[#BD081C] hover:bg-[#ad0719]",
       url: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shortUrl)}&media=${encodeURIComponent(getImageUrl(product.media?.[0]?.url || product.image))}&description=${encodeURIComponent(product.name)}`,
@@ -397,7 +408,7 @@ const ShareModal = ({ isOpen, onClose, product }) => {
           {/* Social Icons */}
           <div className="space-y-3">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Share to Social Media</label>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               {socialShares.map((share) => (
                 <a
                   key={share.name}
@@ -446,7 +457,7 @@ const ProductDetailModal = ({ isOpen, onClose, product, onShare }) => {
           <div className="relative flex-grow h-64 md:h-full overflow-hidden">
             <img
               src={images[currentIndex]}
-              alt={product.name}
+              alt={product.pinAltText || product.name}
               className="w-full h-full object-cover"
             />
             {images.length > 1 && (
@@ -690,6 +701,33 @@ const DealsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {activeDetailProduct ? (
+        <Helmet>
+          <title>{activeDetailProduct.pinTitle || activeDetailProduct.ogTitle || activeDetailProduct.name}</title>
+          <meta name="description" content={activeDetailProduct.pinDescription || activeDetailProduct.ogDescription || activeDetailProduct.description} />
+          
+          <meta property="og:title" content={activeDetailProduct.ogTitle || activeDetailProduct.name} />
+          <meta property="og:description" content={activeDetailProduct.ogDescription || activeDetailProduct.description} />
+          <meta property="og:image" content={getImageUrl(activeDetailProduct.ogImage?.url || activeDetailProduct.media?.[0]?.url || activeDetailProduct.image)} />
+          <meta property="og:url" content={`${window.location.origin}/deals?product=${activeDetailProduct._id}`} />
+          <meta property="og:type" content="product" />
+          
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={activeDetailProduct.ogTitle || activeDetailProduct.name} />
+          <meta name="twitter:description" content={activeDetailProduct.ogDescription || activeDetailProduct.description} />
+          <meta name="twitter:image" content={getImageUrl(activeDetailProduct.ogImage?.url || activeDetailProduct.media?.[0]?.url || activeDetailProduct.image)} />
+          
+          <meta name="pinterest-rich-pin" content="true" />
+          {activeDetailProduct.pinTags && activeDetailProduct.pinTags.length > 0 && (
+            <meta name="keywords" content={activeDetailProduct.pinTags.join(", ")} />
+          )}
+        </Helmet>
+      ) : (
+        <Helmet>
+          <title>Exclusive Deals & Offers | MyThoughtsHub</title>
+          <meta name="description" content="Hand-picked products, authentic database verified reviews, and price drops." />
+        </Helmet>
+      )}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1600px] py-16">
         
         {/* Page Header */}

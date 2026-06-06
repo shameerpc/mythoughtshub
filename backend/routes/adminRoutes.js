@@ -22,6 +22,7 @@ import {
   deleteProduct,
   getAllProducts,
   updateProduct,
+  generateProductSeo,
 } from "../controllers/afiliateController.js";
 import authMiddleware from "../middleware/autherization.js";
 import requireAdmin from "../middleware/requireAdmin.js";
@@ -52,12 +53,19 @@ router.delete("/reviews/:id", adminOnly, deleteReview);
 
 router.get("/affiliates", adminOnly, getAllProducts);
 router.get("/affleates", adminOnly, getAllProducts); // Alias for spelling variations
+router.post("/affiliates/generate-seo", adminOnly, generateProductSeo);
 
-router.post("/affiliates", adminOnly, upload.array("media", 10), createProduct);
-router.post("/affleates", adminOnly, upload.array("media", 10), createProduct);
+const uploadFields = upload.fields([
+  { name: "media", maxCount: 10 },
+  { name: "pinImage", maxCount: 1 },
+  { name: "ogImage", maxCount: 1 }
+]);
 
-router.put("/affiliates/:id", adminOnly, upload.array("media", 10), updateProduct);
-router.put("/affleates/:id", adminOnly, upload.array("media", 10), updateProduct);
+router.post("/affiliates", adminOnly, uploadFields, createProduct);
+router.post("/affleates", adminOnly, uploadFields, createProduct);
+
+router.put("/affiliates/:id", adminOnly, uploadFields, updateProduct);
+router.put("/affleates/:id", adminOnly, uploadFields, updateProduct);
 
 router.delete("/affiliates/:id", adminOnly, deleteProduct);
 router.delete("/affleates/:id", adminOnly, deleteProduct);

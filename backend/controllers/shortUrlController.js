@@ -55,6 +55,22 @@ export const shortenUrl = async (req, res) => {
   }
 };
 
+const isCrawler = (userAgent) => {
+  if (!userAgent) return false;
+  const crawlers = [
+    "facebookexternalhit",
+    "twitterbot",
+    "pinterest",
+    "telegrambot",
+    "whatsapp",
+    "linkedinbot",
+    "slackbot",
+    "googlebot",
+    "bingbot",
+  ];
+  return crawlers.some((c) => userAgent.toLowerCase().includes(c));
+};
+
 export const redirectUrl = async (req, res) => {
   try {
     const { code } = req.params;
@@ -69,6 +85,50 @@ export const redirectUrl = async (req, res) => {
     // Increment click count
     shortUrlEntry.clicks = (shortUrlEntry.clicks || 0) + 1;
     await shortUrlEntry.save();
+
+    // Check if the request is from a crawler bot
+    const userAgent = req.headers["user-agent"] || "";
+    if (isCrawler(userAgent)) {
+      const match = shortUrlEntry.originalUrl.match(/[?&]product=([^&]+)/);
+      if (match) {
+        const productId = match[1];
+        const AffiliateProduct = (await import("../models/AffleateProduct.js")).default;
+        try {
+          const product = await AffiliateProduct.findById(productId);
+          if (product) {
+            const title = product.pinTitle || product.ogTitle || product.name;
+            const desc = product.pinDescription || product.ogDescription || product.description;
+            const imageUrl = product.ogImage?.url || product.media?.[0]?.url || "";
+            
+            return res.send(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${title}</title>
+  <meta name="description" content="${desc}" />
+  <meta property="og:title" content="${product.ogTitle || product.name}" />
+  <meta property="og:description" content="${product.ogDescription || product.description}" />
+  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:url" content="${shortUrlEntry.originalUrl}" />
+  <meta property="og:type" content="product" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${product.ogTitle || product.name}" />
+  <meta name="twitter:description" content="${product.ogDescription || product.description}" />
+  <meta name="twitter:image" content="${imageUrl}" />
+  <meta name="pinterest-rich-pin" content="true" />
+  <meta http-equiv="refresh" content="0;url=${shortUrlEntry.originalUrl}" />
+</head>
+<body>
+  <p>Redirecting to deal...</p>
+  <script>window.location.href = "${shortUrlEntry.originalUrl}";</script>
+</body>
+</html>`);
+          }
+        } catch (err) {
+          console.error("Failed to fetch product details for crawler:", err);
+        }
+      }
+    }
 
     // Redirect to the original URL
     res.redirect(shortUrlEntry.originalUrl);

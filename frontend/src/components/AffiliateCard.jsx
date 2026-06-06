@@ -68,7 +68,7 @@ const AffiliateCard = ({ product }) => {
             >
               <img
                 src={img}
-                alt={`${product.name} ${idx + 1}`}
+                alt={product.pinAltText || product.name || `Product image ${idx + 1}`}
                 className="object-cover w-full h-full"
                 onError={handleImageError}
               />

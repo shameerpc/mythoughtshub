@@ -18,8 +18,14 @@ router.get("/", getAllProducts);
 router.get("/featured", getFeaturedProducts);
 router.get("/:slug", getProductBySlug);
 
-router.post("/", adminOnly, upload.array("media", 10), createProduct);
-router.put("/:id", adminOnly, upload.array("media", 10), updateProduct);
+const uploadFields = upload.fields([
+  { name: "media", maxCount: 10 },
+  { name: "pinImage", maxCount: 1 },
+  { name: "ogImage", maxCount: 1 }
+]);
+
+router.post("/", adminOnly, uploadFields, createProduct);
+router.put("/:id", adminOnly, uploadFields, updateProduct);
 router.delete("/:id", adminOnly, deleteProduct);
 
 export default router;
