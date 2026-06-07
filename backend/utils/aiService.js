@@ -67,7 +67,8 @@ const generateFallbackSEO = (product) => {
     facebook: `Check out our latest review on the ${name}. Find out if this product lives up to the hype and is worth your investment! Read more at MyThoughtsHub.`,
     linkedin: `📊 Product Spotlight: We've compiled a comprehensive analysis of the ${name} within the ${category} space. Discover the core pros, cons, and performance scores in our full article.`,
     twitter: `Honest review: is the ${baseName} really worth it? Check out our verdict on MyThoughtsHub! 🚀 #${category.replace(/\s+/g, "")} #AmazonReviews`,
-    whatsapp: `Hey, found this detailed review of the ${name} on MyThoughtsHub! Thought you might be interested in the pros/cons: `
+    whatsapp: `Hey, found this detailed review of the ${name} on MyThoughtsHub! Thought you might be interested in the pros/cons: `,
+    telegram: `Check out this honest review of the ${name} on MyThoughtsHub! Find out if it is worth your investment: `
   };
 
   // Content Angles
@@ -139,7 +140,8 @@ Expected JSON Structure:
     "facebook": "Engaging Facebook post script",
     "linkedin": "Professional LinkedIn summary",
     "twitter": "Short X tweet under 260 chars with hashtags",
-    "whatsapp": "Informal WhatsApp recommendation text"
+    "whatsapp": "Informal WhatsApp recommendation text",
+    "telegram": "Telegram sharing message with call to action"
   },
   "imageSeo": {
     "filename": "seo-optimized-lowercase-hyphenated-image-filename.jpg",

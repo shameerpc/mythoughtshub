@@ -98,7 +98,7 @@ export const redirectUrl = async (req, res) => {
           if (product) {
             const title = product.pinTitle || product.ogTitle || product.name;
             const desc = product.pinDescription || product.ogDescription || product.description;
-            const imageUrl = product.ogImage?.url || product.media?.[0]?.url || "";
+            const imageUrl = product.pinImage?.url || product.ogImage?.url || product.media?.[0]?.url || "";
             
             return res.send(`<!DOCTYPE html>
 <html>
@@ -106,14 +106,14 @@ export const redirectUrl = async (req, res) => {
   <meta charset="utf-8">
   <title>${title}</title>
   <meta name="description" content="${desc}" />
-  <meta property="og:title" content="${product.ogTitle || product.name}" />
-  <meta property="og:description" content="${product.ogDescription || product.description}" />
+  <meta property="og:title" content="${product.ogTitle || product.pinTitle || product.name}" />
+  <meta property="og:description" content="${product.ogDescription || product.pinDescription || product.description}" />
   <meta property="og:image" content="${imageUrl}" />
   <meta property="og:url" content="${shortUrlEntry.originalUrl}" />
   <meta property="og:type" content="product" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${product.ogTitle || product.name}" />
-  <meta name="twitter:description" content="${product.ogDescription || product.description}" />
+  <meta name="twitter:title" content="${product.ogTitle || product.pinTitle || product.name}" />
+  <meta name="twitter:description" content="${product.ogDescription || product.pinDescription || product.description}" />
   <meta name="twitter:image" content="${imageUrl}" />
   <meta name="pinterest-rich-pin" content="true" />
   <meta http-equiv="refresh" content="0;url=${shortUrlEntry.originalUrl}" />

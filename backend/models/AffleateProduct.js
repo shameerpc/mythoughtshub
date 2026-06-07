@@ -109,6 +109,7 @@ const affiliateSchema = new mongoose.Schema(
       linkedin: String,
       twitter: String,
       whatsapp: String,
+      telegram: String,
     },
     imageSeo: {
       filename: String,

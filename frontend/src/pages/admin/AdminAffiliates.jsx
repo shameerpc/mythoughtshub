@@ -36,6 +36,7 @@ const emptyForm = {
     linkedin: "",
     twitter: "",
     whatsapp: "",
+    telegram: "",
   },
   imageSeo: {
     filename: "",
@@ -138,7 +139,7 @@ const AdminAffiliates = () => {
       pinTags: Array.isArray(product.pinTags) ? product.pinTags.join(", ") : product.pinTags || "",
       pinImageFile: null,
       ogImageFile: null,
-      socialSharing: product.socialSharing || emptyForm.socialSharing,
+      socialSharing: { ...emptyForm.socialSharing, ...(product.socialSharing || {}) },
       imageSeo: product.imageSeo || emptyForm.imageSeo,
       seoScore: product.seoScore || emptyForm.seoScore,
       trendSuggestions: product.trendSuggestions || emptyForm.trendSuggestions,
@@ -419,7 +420,7 @@ const AdminAffiliates = () => {
               <h4 className="text-xs font-bold text-indigo-700 uppercase tracking-widest flex items-center gap-1.5">
                 <Share2 size={14} /> Custom Social Share Scripts (Editable)
               </h4>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
                 <div className="space-y-1 bg-white p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
                   <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">WhatsApp Text</label>
                   <textarea rows="4" className="w-full rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-indigo-500 mt-1.5 resize-none text-slate-600" value={form.socialSharing?.whatsapp || ""} onChange={(e) => setForm({ ...form, socialSharing: { ...form.socialSharing, whatsapp: e.target.value } })} />
@@ -427,6 +428,10 @@ const AdminAffiliates = () => {
                 <div className="space-y-1 bg-white p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
                   <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Facebook Script</label>
                   <textarea rows="4" className="w-full rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-indigo-500 mt-1.5 resize-none text-slate-600" value={form.socialSharing?.facebook || ""} onChange={(e) => setForm({ ...form, socialSharing: { ...form.socialSharing, facebook: e.target.value } })} />
+                </div>
+                <div className="space-y-1 bg-white p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
+                  <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Telegram Script</label>
+                  <textarea rows="4" className="w-full rounded-lg border border-slate-200 p-2 text-xs outline-none focus:border-indigo-500 mt-1.5 resize-none text-slate-600" value={form.socialSharing?.telegram || ""} onChange={(e) => setForm({ ...form, socialSharing: { ...form.socialSharing, telegram: e.target.value } })} />
                 </div>
                 <div className="space-y-1 bg-white p-3 rounded-xl border border-slate-100 flex flex-col justify-between">
                   <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">LinkedIn Update</label>

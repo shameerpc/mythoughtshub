@@ -294,11 +294,27 @@ const ShareModal = ({ isOpen, onClose, product }) => {
 
   const shareText = `Check out this amazing deal: ${product.name}`;
   
+  const pinTitle = product.pinTitle?.trim() || product.name || "";
+  const pinDesc = product.pinDescription?.trim() || product.description || "";
+  const customCaption = product.socialSharing?.pinterest?.trim();
+  
+  let pinterestText = "";
+  if (customCaption) {
+    pinterestText = customCaption;
+  } else if (pinTitle && pinDesc) {
+    pinterestText = `${pinTitle} - ${pinDesc}`;
+  } else {
+    pinterestText = pinTitle || pinDesc;
+  }
+  
+  const pinImage = product.pinImage?.url || product.ogImage?.url || product.media?.[0]?.url || product.image || "";
+  const pinterestMediaUrl = getImageUrl(pinImage);
+
   const socialShares = [
     {
       name: "WhatsApp",
       color: "bg-[#25D366] hover:bg-[#20ba5a]",
-      url: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + " " + shortUrl)}`,
+      url: `https://api.whatsapp.com/send?text=${encodeURIComponent((product.socialSharing?.whatsapp || shareText) + " " + shortUrl)}`,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.625 1.451 5.402.002 9.791-4.382 9.794-9.786.002-2.586-1.002-5.02-2.828-6.848S14.595 1.26 12.012 1.26c-5.41 0-9.801 4.382-9.805 9.789-.001 1.77.481 3.5 1.393 5.008L2.613 21.33l5.034-1.321h.001zM17.15 14.65c-.282-.142-1.673-.825-1.932-.92-.257-.094-.446-.142-.633.142-.187.284-.725.92-.888 1.11-.162.188-.325.212-.607.07-.282-.142-1.194-.44-2.274-1.402-.84-.75-1.408-1.675-1.573-1.958-.164-.283-.018-.435.123-.576.127-.127.282-.329.424-.495.142-.165.19-.283.284-.471.094-.188.047-.354-.023-.495-.071-.142-.633-1.527-.868-2.092-.228-.551-.48-.475-.66-.484-.17-.008-.367-.01-.565-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.673-.684 1.908-1.344.235-.66.235-1.226.164-1.344-.07-.118-.258-.188-.54-.33z"/>
@@ -308,7 +324,7 @@ const ShareModal = ({ isOpen, onClose, product }) => {
     {
       name: "X",
       color: "bg-[#000000] hover:bg-[#1a1a1a]",
-      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shortUrl)}`,
+      url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(product.socialSharing?.twitter || shareText)}&url=${encodeURIComponent(shortUrl)}`,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
@@ -318,7 +334,7 @@ const ShareModal = ({ isOpen, onClose, product }) => {
     {
       name: "Facebook",
       color: "bg-[#1877F2] hover:bg-[#166FE5]",
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}`,
+      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shortUrl)}&quote=${encodeURIComponent(product.socialSharing?.facebook || product.ogDescription || shareText)}`,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -328,7 +344,7 @@ const ShareModal = ({ isOpen, onClose, product }) => {
     {
       name: "Telegram",
       color: "bg-[#0088cc] hover:bg-[#0077b5]",
-      url: `https://t.me/share/url?url=${encodeURIComponent(shortUrl)}&text=${encodeURIComponent(shareText)}`,
+      url: `https://t.me/share/url?url=${encodeURIComponent(shortUrl)}&text=${encodeURIComponent(product.socialSharing?.telegram || shareText)}`,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.87 4.326-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.46c.538-.196 1.006.128.832.909z"/>
@@ -338,7 +354,7 @@ const ShareModal = ({ isOpen, onClose, product }) => {
     {
       name: "Pinterest",
       color: "bg-[#BD081C] hover:bg-[#ad0719]",
-      url: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shortUrl)}&media=${encodeURIComponent(getImageUrl(product.media?.[0]?.url || product.image))}&description=${encodeURIComponent(product.name)}`,
+      url: `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shortUrl)}&media=${encodeURIComponent(pinterestMediaUrl)}&description=${encodeURIComponent(pinterestText)}`,
       icon: (
         <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
           <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.162-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.966 1.406-5.966s-.359-.72-.359-1.781c0-1.663.967-2.907 2.17-2.907 1.02 0 1.513.769 1.513 1.689 0 1.029-.656 2.568-.994 3.995-.28 1.189.599 2.158 1.77 2.158 2.124 0 3.758-2.241 3.758-5.474 0-2.861-2.056-4.86-4.991-4.86-3.399 0-5.395 2.548-5.395 5.182 0 1.027.395 2.13.89 2.73.098.12.112.223.083.345-.09.375-.293 1.199-.334 1.363-.053.211-.174.256-.402.15-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.162 0 7.396 2.965 7.396 6.927 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.743-1.37l-.749 2.853c-.27 1.039-1.001 2.34-1.492 3.14 1.124.347 2.317.535 3.551.535 6.621 0 11.985-5.367 11.985-11.987C24.007 5.368 18.64 0 12.017 0z"/>
@@ -706,16 +722,16 @@ const DealsPage = () => {
           <title>{activeDetailProduct.pinTitle || activeDetailProduct.ogTitle || activeDetailProduct.name}</title>
           <meta name="description" content={activeDetailProduct.pinDescription || activeDetailProduct.ogDescription || activeDetailProduct.description} />
           
-          <meta property="og:title" content={activeDetailProduct.ogTitle || activeDetailProduct.name} />
-          <meta property="og:description" content={activeDetailProduct.ogDescription || activeDetailProduct.description} />
-          <meta property="og:image" content={getImageUrl(activeDetailProduct.ogImage?.url || activeDetailProduct.media?.[0]?.url || activeDetailProduct.image)} />
+          <meta property="og:title" content={activeDetailProduct.ogTitle || activeDetailProduct.pinTitle || activeDetailProduct.name} />
+          <meta property="og:description" content={activeDetailProduct.ogDescription || activeDetailProduct.pinDescription || activeDetailProduct.description} />
+          <meta property="og:image" content={getImageUrl(activeDetailProduct.pinImage?.url || activeDetailProduct.ogImage?.url || activeDetailProduct.media?.[0]?.url || activeDetailProduct.image)} />
           <meta property="og:url" content={`${window.location.origin}/deals?product=${activeDetailProduct._id}`} />
           <meta property="og:type" content="product" />
           
           <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content={activeDetailProduct.ogTitle || activeDetailProduct.name} />
-          <meta name="twitter:description" content={activeDetailProduct.ogDescription || activeDetailProduct.description} />
-          <meta name="twitter:image" content={getImageUrl(activeDetailProduct.ogImage?.url || activeDetailProduct.media?.[0]?.url || activeDetailProduct.image)} />
+          <meta name="twitter:title" content={activeDetailProduct.ogTitle || activeDetailProduct.pinTitle || activeDetailProduct.name} />
+          <meta name="twitter:description" content={activeDetailProduct.ogDescription || activeDetailProduct.pinDescription || activeDetailProduct.description} />
+          <meta name="twitter:image" content={getImageUrl(activeDetailProduct.pinImage?.url || activeDetailProduct.ogImage?.url || activeDetailProduct.media?.[0]?.url || activeDetailProduct.image)} />
           
           <meta name="pinterest-rich-pin" content="true" />
           {activeDetailProduct.pinTags && activeDetailProduct.pinTags.length > 0 && (
